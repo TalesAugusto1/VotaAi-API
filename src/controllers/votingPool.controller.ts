@@ -25,6 +25,8 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
           select: {
             id: true,
             text: true,
+            description: true,
+            image: true,
             _count: {
               select: { votes: true },
             },
@@ -82,19 +84,40 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
       }`
     );
 
-    // Add hasImage flag to each pool
-    const poolsWithImageFlags = pools.map((pool) => {
-      const { image: _, ...poolData } = pool;
+    // Convert binary image data to base64 for direct use in the client
+    const poolsWithImageData = pools.map((pool) => {
+      // For main pool image
+      const imageBase64 = pool.image
+        ? `data:image/jpeg;base64,${Buffer.from(pool.image).toString("base64")}`
+        : null;
+
+      // For option images
+      const optionsWithImages = pool.options.map((option) => {
+        const optionImageBase64 = option.image
+          ? `data:image/jpeg;base64,${Buffer.from(option.image).toString(
+              "base64"
+            )}`
+          : null;
+
+        return {
+          ...option,
+          image: undefined, // Remove binary data
+          imageData: optionImageBase64, // Add base64 data
+        };
+      });
+
       return {
-        ...poolData,
-        hasImage: !!pool.image,
+        ...pool,
+        image: undefined, // Remove binary data to avoid duplication
+        imageData: imageBase64, // Add base64 data for direct use
+        options: optionsWithImages,
       };
     });
 
     console.log(
-      `[POOL] Returning ${poolsWithImageFlags.length} voting pools to client`
+      `[POOL] Returning ${poolsWithImageData.length} voting pools to client with inline image data`
     );
-    return res.status(200).json(poolsWithImageFlags);
+    return res.status(200).json(poolsWithImageData);
   } catch (error) {
     console.error("[POOL] Error fetching voting pools:", error);
     return res.status(500).json({ message: "Error fetching voting pools" });
@@ -105,6 +128,7 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
 export const getVotingPoolById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    console.log(`[POOL] Getting voting pool by ID: ${id}`);
 
     const pool = await prisma.votingPool.findUnique({
       where: { id },
@@ -114,6 +138,7 @@ export const getVotingPoolById = async (req: Request, res: Response) => {
             id: true,
             text: true,
             description: true,
+            image: true,
             _count: {
               select: { votes: true },
             },
@@ -123,31 +148,50 @@ export const getVotingPoolById = async (req: Request, res: Response) => {
     });
 
     if (!pool) {
+      console.log(`[POOL] Voting pool not found: ${id}`);
       return res.status(404).json({ message: "Voting pool not found" });
     }
 
-    // Add hasImage flag to pool and options
-    const { image: _, ...poolData } = pool;
-    const poolWithImageFlag = {
-      ...poolData,
-      hasImage: !!pool.image,
-      options: await Promise.all(
-        pool.options.map(async (option) => {
-          // Fetch option to get image data
-          const optionData = await prisma.votingOption.findUnique({
-            where: { id: option.id },
-            select: { image: true },
-          });
+    // Convert binary images to base64 for direct use in the client
+    const imageBase64 = pool.image
+      ? `data:image/jpeg;base64,${Buffer.from(pool.image).toString("base64")}`
+      : null;
 
-          return {
-            ...option,
-            hasImage: !!optionData?.image,
-          };
-        })
-      ),
+    // For option images
+    const optionsWithImages = pool.options.map((option) => {
+      const optionImageBase64 = option.image
+        ? `data:image/jpeg;base64,${Buffer.from(option.image).toString(
+            "base64"
+          )}`
+        : null;
+
+      return {
+        ...option,
+        image: undefined, // Remove binary data
+        imageData: optionImageBase64, // Add base64 data
+      };
+    });
+
+    // Create the response object with image data
+    const poolWithImageData = {
+      ...pool,
+      image: undefined, // Remove binary data to avoid duplication
+      imageData: imageBase64, // Add base64 data for direct use
+      options: optionsWithImages,
     };
 
-    return res.status(200).json(poolWithImageFlag);
+    console.log(
+      `[POOL] Successfully retrieved voting pool: ${id} with inline image data`
+    );
+    console.log(`[POOL] Has image: ${!!imageBase64}`);
+    console.log(`[POOL] Options count: ${poolWithImageData.options.length}`);
+    console.log(
+      `[POOL] Options with images: ${
+        poolWithImageData.options.filter((o) => o.imageData).length
+      }`
+    );
+
+    return res.status(200).json(poolWithImageData);
   } catch (error) {
     console.error("Error fetching voting pool:", error);
     return res.status(500).json({ message: "Error fetching voting pool" });
@@ -168,6 +212,12 @@ export const createVotingPool = async (req: Request, res: Response) => {
   console.log(
     `[POOL] Request file: ${req.file ? req.file.fieldname : "No file"}`
   );
+
+  // Check if we have image data
+  console.log(`[POOL] Has image data: ${!!req.body.image}`);
+  if (req.body.image) {
+    console.log(`[POOL] Image data size: ${req.body.image.length} bytes`);
+  }
 
   // Log the anonymous field specifically
   console.log(
@@ -270,7 +320,7 @@ export const createVotingPool = async (req: Request, res: Response) => {
     );
     const votingPool = await prisma.$transaction(async (tx) => {
       // Create the voting pool
-      console.log(`[POOL] Creating pool record`);
+      console.log(`[POOL] Creating pool record with image: ${!!image}`);
       const pool = await tx.votingPool.create({
         data: {
           title,
@@ -281,8 +331,8 @@ export const createVotingPool = async (req: Request, res: Response) => {
           endDate: new Date(endDate),
           anonymous: isAnonymous,
           status,
-          latitude,
-          longitude,
+          latitude: latitude ? parseFloat(latitude) : null,
+          longitude: longitude ? parseFloat(longitude) : null,
           address,
         },
       });
@@ -292,7 +342,13 @@ export const createVotingPool = async (req: Request, res: Response) => {
       console.log(
         `[POOL] Creating ${parsedOptions.length} options for pool ID: ${pool.id}`
       );
-      for (const option of parsedOptions) {
+      for (let i = 0; i < parsedOptions.length; i++) {
+        const option = parsedOptions[i];
+        console.log(
+          `[POOL] Creating option ${i} with text: ${
+            option.text
+          }, hasImage: ${!!option.image}`
+        );
         await tx.votingOption.create({
           data: {
             poolId: pool.id,
@@ -314,6 +370,7 @@ export const createVotingPool = async (req: Request, res: Response) => {
               id: true,
               text: true,
               description: true,
+              image: true,
             },
           },
         },
@@ -333,10 +390,13 @@ export const createVotingPool = async (req: Request, res: Response) => {
     const responseData = {
       ...poolData,
       hasImage: !!image,
-      options: votingPool.options.map((option) => ({
-        ...option,
-        hasImage: false, // We don't have this info here, but the front end can fetch it separately
-      })),
+      options: votingPool.options.map((option) => {
+        const { image: optImage, ...optionData } = option as any;
+        return {
+          ...optionData,
+          hasImage: !!optImage,
+        };
+      }),
     };
 
     console.log(

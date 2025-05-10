@@ -2,6 +2,7 @@ import multer from "multer";
 import { Request, Response, NextFunction } from "express";
 import fs from "fs";
 import path from "path";
+// Types are now defined in /src/types/express.d.ts
 
 // Configure in-memory storage instead of disk storage
 const storage = multer.memoryStorage();
@@ -92,13 +93,18 @@ export const processImage = (
 ) => {
   try {
     if (!req.file) {
+      console.log("[PROCESS] No file to process in processImage middleware");
       return next();
     }
 
-    // Add the file's binary data to the request body with a consistent field name
-    const fieldName = req.file.fieldname === "avatar" ? "avatarImage" : "image";
-    req.body[fieldName] = req.file.buffer;
+    console.log(
+      `[PROCESS] Processing image: ${req.file.fieldname}, size: ${req.file.size} bytes`
+    );
 
+    // Add the file's binary data to the request body with a consistent field name
+    req.body.image = req.file.buffer;
+
+    console.log("[PROCESS] Successfully added image buffer to request body");
     next();
   } catch (error) {
     console.error("Error processing image:", error);
@@ -114,25 +120,45 @@ export const processOptionImages = (
 ) => {
   try {
     if (!req.files || Object.keys(req.files).length === 0) {
+      console.log(
+        "[PROCESS] No files to process in processOptionImages middleware"
+      );
       return next();
     }
+
+    console.log(
+      `[PROCESS] Processing option images, fields: ${Object.keys(
+        req.files
+      ).join(", ")}`
+    );
 
     // Parse options from the request body if they exist as a string
     if (typeof req.body.options === "string") {
       try {
         req.body.options = JSON.parse(req.body.options);
+        console.log(
+          `[PROCESS] Parsed options JSON successfully, found ${req.body.options.length} options`
+        );
       } catch (error) {
+        console.error("[PROCESS] Failed to parse options JSON:", error);
         return res.status(400).json({ message: "Invalid options JSON format" });
       }
     }
 
     // If options aren't provided, create an empty array
     if (!req.body.options) {
+      console.log("[PROCESS] No options found, creating empty array");
       req.body.options = [];
     }
 
     // Get the files from the request
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    // Add the main image to the request body if it exists
+    if (files["image"] && files["image"].length > 0) {
+      req.body.image = files["image"][0].buffer;
+      console.log("[PROCESS] Added main pool image buffer to request body");
+    }
 
     // For each option file, add the binary data to the corresponding option
     Object.keys(files).forEach((fieldName) => {
@@ -140,39 +166,15 @@ export const processOptionImages = (
         const index = parseInt(fieldName.replace("option", ""));
         if (index >= 0 && index < req.body.options.length) {
           req.body.options[index].image = files[fieldName][0].buffer;
+          console.log(`[PROCESS] Added image buffer to option ${index}`);
         }
       }
     });
 
+    console.log("[PROCESS] Successfully processed all image files");
     next();
   } catch (error) {
     console.error("Error processing option images:", error);
     res.status(500).json({ message: "Error processing option images" });
   }
 };
-
-// Create a custom type for the uploaded file
-declare global {
-  namespace Express {
-    interface Request {
-      file?: {
-        fieldname: string;
-        originalname: string;
-        encoding: string;
-        mimetype: string;
-        buffer: Buffer;
-        size: number;
-      };
-      files?: {
-        [fieldname: string]: {
-          fieldname: string;
-          originalname: string;
-          encoding: string;
-          mimetype: string;
-          buffer: Buffer;
-          size: number;
-        }[];
-      };
-    }
-  }
-}
