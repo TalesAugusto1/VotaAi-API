@@ -127,6 +127,7 @@ exports.Prisma.UserScalarFieldEnum = {
   email: 'email',
   password: 'password',
   avatarImage: 'avatarImage',
+  role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -162,6 +163,13 @@ exports.Prisma.VoteScalarFieldEnum = {
   userId: 'userId',
   poolId: 'poolId',
   optionId: 'optionId'
+};
+
+exports.Prisma.VotingParticipationScalarFieldEnum = {
+  id: 'id',
+  timestamp: 'timestamp',
+  userId: 'userId',
+  poolId: 'poolId'
 };
 
 exports.Prisma.SortOrder = {
@@ -205,12 +213,19 @@ exports.Prisma.VoteOrderByRelevanceFieldEnum = {
   optionId: 'optionId'
 };
 
+exports.Prisma.VotingParticipationOrderByRelevanceFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  poolId: 'poolId'
+};
+
 
 exports.Prisma.ModelName = {
   User: 'User',
   VotingPool: 'VotingPool',
   VotingOption: 'VotingOption',
-  Vote: 'Vote'
+  Vote: 'Vote',
+  VotingParticipation: 'VotingParticipation'
 };
 
 /**

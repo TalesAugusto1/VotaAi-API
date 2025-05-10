@@ -22,6 +22,7 @@ async function main() {
 
   // Clear existing data
   console.log("Clearing existing data...");
+  await prisma.votingParticipation.deleteMany({});
   await prisma.vote.deleteMany({});
   await prisma.votingOption.deleteMany({});
   await prisma.votingPool.deleteMany({});
@@ -36,6 +37,7 @@ async function main() {
       email: "admin@votaai.com",
       password: await hashPassword("senha123"),
       // No avatar image for this user
+      role: 2, // Set as admin user
     },
   });
 
@@ -444,6 +446,85 @@ async function main() {
           poolId: urbanInfrastructurePool.id,
           optionId: urbanOptions[3].id,
           userId: null, // Anonymous votes
+        })),
+    ],
+  });
+
+  // Add votes to the environmental pool (active, anonymous)
+  const environmentalOptions = await prisma.votingOption.findMany({
+    where: { poolId: environmentalPool.id },
+  });
+
+  // For anonymous polls, we need to:
+  // 1. Create anonymous votes (no userId)
+  // 2. Track user participation separately
+
+  // Create anonymous votes first
+  await prisma.vote.createMany({
+    data: [
+      // Add anonymous votes for various options
+      // Option 0 votes
+      ...Array(12)
+        .fill(null)
+        .map(() => ({
+          poolId: environmentalPool.id,
+          optionId: environmentalOptions[0].id,
+          userId: null,
+        })),
+
+      // Option 1 votes
+      ...Array(8)
+        .fill(null)
+        .map(() => ({
+          poolId: environmentalPool.id,
+          optionId: environmentalOptions[1].id,
+          userId: null,
+        })),
+
+      // Option 2 votes
+      ...Array(15)
+        .fill(null)
+        .map(() => ({
+          poolId: environmentalPool.id,
+          optionId: environmentalOptions[2].id,
+          userId: null,
+        })),
+    ],
+  });
+
+  // Now track user participation without revealing their choices
+  // First, get the IDs of all test users
+  const testUserIds = await Promise.all(
+    testUsers.map(async (user) => {
+      const found = await prisma.user.findUnique({
+        where: { email: user.email },
+        select: { id: true },
+      });
+      return found?.id;
+    })
+  );
+
+  // Then create the participation records for all users
+  await prisma.votingParticipation.createMany({
+    data: [
+      // Admin participated
+      {
+        userId: adminUser.id,
+        poolId: environmentalPool.id,
+      },
+
+      // Regular user participated
+      {
+        userId: regularUser.id,
+        poolId: environmentalPool.id,
+      },
+
+      // Other test users participated
+      ...testUserIds
+        .filter((id) => id !== undefined)
+        .map((id) => ({
+          userId: id as string,
+          poolId: environmentalPool.id,
         })),
     ],
   });

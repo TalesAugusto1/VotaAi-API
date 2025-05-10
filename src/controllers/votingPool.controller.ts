@@ -14,8 +14,12 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
     // Log query parameters
     console.log(`[POOL] Query parameters:`, req.query);
 
-    const pools = await prisma.votingPool.findMany({
-      where: status ? { status: status as string } : undefined,
+    // Get the current date/time for status calculation
+    const now = new Date();
+    console.log(`[POOL] Current server time: ${now.toISOString()}`);
+
+    // First get all pools regardless of status
+    let pools = await prisma.votingPool.findMany({
       include: {
         options: {
           select: {
@@ -35,7 +39,48 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
       },
     });
 
-    console.log(`[POOL] Found ${pools.length} voting pools`);
+    console.log(
+      `[POOL] Found ${pools.length} total voting pools before filtering`
+    );
+
+    // Recalculate status based on current date
+    pools = pools.map((pool) => {
+      const startDate = new Date(pool.startDate);
+      const endDate = new Date(pool.endDate);
+
+      let currentStatus = "upcoming";
+      if (now >= startDate && now < endDate) {
+        currentStatus = "active";
+      } else if (now >= endDate) {
+        currentStatus = "closed";
+      }
+
+      // If calculated status differs from stored status, log it
+      if (currentStatus !== pool.status) {
+        console.log(
+          `[POOL] Status recalculated for pool ${pool.id} - DB: ${pool.status}, Actual: ${currentStatus}`
+        );
+        console.log(
+          `[POOL] Dates - Start: ${startDate.toISOString()}, End: ${endDate.toISOString()}, Now: ${now.toISOString()}`
+        );
+
+        // Update the status in memory (not in DB yet)
+        return { ...pool, status: currentStatus };
+      }
+
+      return pool;
+    });
+
+    // Apply status filter if provided
+    if (status) {
+      pools = pools.filter((pool) => pool.status === status);
+    }
+
+    console.log(
+      `[POOL] Found ${pools.length} voting pools after filtering${
+        status ? ` by status: ${status}` : ""
+      }`
+    );
 
     // Add hasImage flag to each pool
     const poolsWithImageFlags = pools.map((pool) => {
@@ -114,6 +159,22 @@ export const createVotingPool = async (req: Request, res: Response) => {
   console.log(
     `[POOL] Create voting pool request - User: ${req.user?.id}, Title: "${req.body.title}"`
   );
+  console.log(`[POOL] Request body keys: ${Object.keys(req.body).join(", ")}`);
+  console.log(
+    `[POOL] Request files: ${
+      req.files ? Object.keys(req.files).join(", ") : "No files"
+    }`
+  );
+  console.log(
+    `[POOL] Request file: ${req.file ? req.file.fieldname : "No file"}`
+  );
+
+  // Log the anonymous field specifically
+  console.log(
+    `[POOL] anonymous value: "${req.body.anonymous}", type: ${typeof req.body
+      .anonymous}`
+  );
+
   try {
     const {
       title,
@@ -129,9 +190,54 @@ export const createVotingPool = async (req: Request, res: Response) => {
       address,
     } = req.body;
 
+    // Log parsed anonymous value
+    console.log(
+      `[POOL] Parsed anonymous value: ${anonymous}, type: ${typeof anonymous}`
+    );
+
+    // Ensure anonymous is a boolean
+    const isAnonymous =
+      typeof anonymous === "string"
+        ? anonymous.toLowerCase() === "true"
+        : Boolean(anonymous);
+
+    console.log(
+      `[POOL] Final anonymous value: ${isAnonymous}, type: ${typeof isAnonymous}`
+    );
+
+    // Check for options parsing - it might be a string from FormData
+    let parsedOptions = options;
+    if (typeof options === "string") {
+      try {
+        parsedOptions = JSON.parse(options);
+        console.log(`[POOL] Successfully parsed options JSON string`);
+      } catch (err) {
+        console.error(`[POOL] Error parsing options JSON string: ${err}`);
+        return res
+          .status(400)
+          .json({ message: "Invalid options format - must be valid JSON" });
+      }
+    }
+
+    // Validate required fields
+    if (
+      !title ||
+      !description ||
+      !category ||
+      !parsedOptions ||
+      !Array.isArray(parsedOptions)
+    ) {
+      console.error(
+        `[POOL] Missing required fields: ${!title ? "title" : ""} ${
+          !description ? "description" : ""
+        } ${!category ? "category" : ""} ${!parsedOptions ? "options" : ""}`
+      );
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
     console.log(
       `[POOL] Pool details - Title: "${title}", Category: "${category}", Options: ${
-        options?.length
+        parsedOptions?.length
       }, HasImage: ${!!image}`
     );
     console.log(
@@ -173,7 +279,7 @@ export const createVotingPool = async (req: Request, res: Response) => {
           image,
           startDate: new Date(startDate),
           endDate: new Date(endDate),
-          anonymous: anonymous || false,
+          anonymous: isAnonymous,
           status,
           latitude,
           longitude,
@@ -184,9 +290,9 @@ export const createVotingPool = async (req: Request, res: Response) => {
 
       // Create options separately to handle binary images for each option
       console.log(
-        `[POOL] Creating ${options.length} options for pool ID: ${pool.id}`
+        `[POOL] Creating ${parsedOptions.length} options for pool ID: ${pool.id}`
       );
-      for (const option of options) {
+      for (const option of parsedOptions) {
         await tx.votingOption.create({
           data: {
             poolId: pool.id,
@@ -240,8 +346,20 @@ export const createVotingPool = async (req: Request, res: Response) => {
       message: "Voting pool created successfully",
       votingPool: responseData,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("[POOL] Error creating voting pool:", error);
+
+    // Provide more specific error messages
+    if (error.name === "PrismaClientValidationError") {
+      console.error(
+        "[POOL] Prisma validation error - check field types and requirements"
+      );
+      return res.status(400).json({
+        message: "Invalid data format",
+        details: error.message,
+      });
+    }
+
     return res.status(500).json({ message: "Error creating voting pool" });
   }
 };

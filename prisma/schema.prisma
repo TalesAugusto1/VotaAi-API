@@ -21,10 +21,13 @@ model User {
   email     String   @unique
   password  String
   avatarImage Bytes?
+  role      Int      @default(1)  // 1: normal user, 2: admin user
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
   votes     Vote[]
+  // Track participation in anonymous voting pools
+  votingParticipation VotingParticipation[]
 }
 
 model VotingPool {
@@ -42,6 +45,8 @@ model VotingPool {
   
   options     VotingOption[]
   votes       Vote[]
+  // Track user participation in anonymous pools
+  participation VotingParticipation[]
   
   // Location data
   latitude    Float?
@@ -76,4 +81,19 @@ model Vote {
   optionId   String
   
   @@unique([userId, poolId]) // Ensure one vote per user per poll
+}
+
+// New model to track user participation in anonymous polls
+model VotingParticipation {
+  id         String   @id @default(uuid())
+  timestamp  DateTime @default(now())
+  
+  // Relations
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  
+  votingPool VotingPool @relation(fields: [poolId], references: [id])
+  poolId     String
+  
+  @@unique([userId, poolId]) // Ensure one participation record per user per poll
 }

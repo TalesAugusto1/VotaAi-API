@@ -86,6 +86,7 @@ export const register = async (req: Request, res: Response) => {
         email,
         password: hashedPassword,
         avatarImage,
+        role: 1, // Default to normal user
       },
       select: {
         id: true,
@@ -93,11 +94,12 @@ export const register = async (req: Request, res: Response) => {
         cpf: true,
         email: true,
         avatarImage: true,
+        role: true,
         createdAt: true,
       },
     });
     console.log(
-      `[AUTH] User created successfully - ID: ${user.id}, Email: ${email}`
+      `[AUTH] User created successfully - ID: ${user.id}, Email: ${email}, Role: ${user.role}`
     );
 
     // Generate JWT token
@@ -160,6 +162,17 @@ export const login = async (req: Request, res: Response) => {
     // Find user
     const user = await prisma.user.findUnique({
       where: { cpf },
+      select: {
+        id: true,
+        name: true,
+        cpf: true,
+        email: true,
+        password: true,
+        avatarImage: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     if (!user) {
@@ -254,6 +267,17 @@ export const getMe = async (req: Request, res: Response) => {
     // We need to fetch fresh data to get the avatar
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
+      select: {
+        id: true,
+        name: true,
+        cpf: true,
+        email: true,
+        password: true,
+        avatarImage: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     if (!user) {

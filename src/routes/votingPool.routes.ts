@@ -34,26 +34,17 @@ router.get("/option/:id/image", getOptionImage);
 router.post(
   "/",
   authMiddleware,
-  // Handle pool image and option images
-  (req, res, next) => {
-    // If the request has option files, use uploadOptionImages
-    // otherwise use uploadSingle for just the pool image
-    const contentType = req.headers["content-type"] || "";
-    if (
-      contentType.includes("multipart/form-data") &&
-      req.body.hasOptionImages === "true"
-    ) {
-      uploadOptionImages(req, res, next);
-    } else {
-      uploadSingle("image")(req, res, next);
-    }
-  },
+  // Handle all uploads with the option images middleware to be safe
+  uploadOptionImages,
   // Process the images accordingly
   (req, res, next) => {
-    if (req.files) {
+    console.log(`[ROUTE] Processing images, files present: ${!!req.files}`);
+    if (req.files && Object.keys(req.files).length > 0) {
       processOptionImages(req, res, next);
-    } else {
+    } else if (req.file) {
       processImage(req, res, next);
+    } else {
+      next();
     }
   },
   validate(votingPoolSchema),
@@ -64,23 +55,19 @@ router.post(
 router.put(
   "/:id",
   authMiddleware,
-  // Same logic as POST
+  // Use the same upload middleware as POST
+  uploadOptionImages,
+  // Process the images accordingly
   (req, res, next) => {
-    const contentType = req.headers["content-type"] || "";
-    if (
-      contentType.includes("multipart/form-data") &&
-      req.body.hasOptionImages === "true"
-    ) {
-      uploadOptionImages(req, res, next);
-    } else {
-      uploadSingle("image")(req, res, next);
-    }
-  },
-  (req, res, next) => {
-    if (req.files) {
+    console.log(
+      `[ROUTE] Processing images for update, files present: ${!!req.files}`
+    );
+    if (req.files && Object.keys(req.files).length > 0) {
       processOptionImages(req, res, next);
-    } else {
+    } else if (req.file) {
       processImage(req, res, next);
+    } else {
+      next();
     }
   },
   validate(updateVotingPoolSchema),

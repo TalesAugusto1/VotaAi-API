@@ -33,6 +33,11 @@ export type VotingOption = $Result.DefaultSelection<Prisma.$VotingOptionPayload>
  * 
  */
 export type Vote = $Result.DefaultSelection<Prisma.$VotePayload>
+/**
+ * Model VotingParticipation
+ * 
+ */
+export type VotingParticipation = $Result.DefaultSelection<Prisma.$VotingParticipationPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -198,6 +203,16 @@ export class PrismaClient<
     * ```
     */
   get vote(): Prisma.VoteDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.votingParticipation`: Exposes CRUD operations for the **VotingParticipation** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more VotingParticipations
+    * const votingParticipations = await prisma.votingParticipation.findMany()
+    * ```
+    */
+  get votingParticipation(): Prisma.VotingParticipationDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -641,7 +656,8 @@ export namespace Prisma {
     User: 'User',
     VotingPool: 'VotingPool',
     VotingOption: 'VotingOption',
-    Vote: 'Vote'
+    Vote: 'Vote',
+    VotingParticipation: 'VotingParticipation'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -660,7 +676,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "votingPool" | "votingOption" | "vote"
+      modelProps: "user" | "votingPool" | "votingOption" | "vote" | "votingParticipation"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -928,6 +944,72 @@ export namespace Prisma {
           }
         }
       }
+      VotingParticipation: {
+        payload: Prisma.$VotingParticipationPayload<ExtArgs>
+        fields: Prisma.VotingParticipationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.VotingParticipationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VotingParticipationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.VotingParticipationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VotingParticipationPayload>
+          }
+          findFirst: {
+            args: Prisma.VotingParticipationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VotingParticipationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.VotingParticipationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VotingParticipationPayload>
+          }
+          findMany: {
+            args: Prisma.VotingParticipationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VotingParticipationPayload>[]
+          }
+          create: {
+            args: Prisma.VotingParticipationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VotingParticipationPayload>
+          }
+          createMany: {
+            args: Prisma.VotingParticipationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.VotingParticipationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VotingParticipationPayload>
+          }
+          update: {
+            args: Prisma.VotingParticipationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VotingParticipationPayload>
+          }
+          deleteMany: {
+            args: Prisma.VotingParticipationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.VotingParticipationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.VotingParticipationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VotingParticipationPayload>
+          }
+          aggregate: {
+            args: Prisma.VotingParticipationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVotingParticipation>
+          }
+          groupBy: {
+            args: Prisma.VotingParticipationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<VotingParticipationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.VotingParticipationCountArgs<ExtArgs>
+            result: $Utils.Optional<VotingParticipationCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1016,6 +1098,7 @@ export namespace Prisma {
     votingPool?: VotingPoolOmit
     votingOption?: VotingOptionOmit
     vote?: VoteOmit
+    votingParticipation?: VotingParticipationOmit
   }
 
   /* Types for Logging */
@@ -1111,10 +1194,12 @@ export namespace Prisma {
 
   export type UserCountOutputType = {
     votes: number
+    votingParticipation: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     votes?: boolean | UserCountOutputTypeCountVotesArgs
+    votingParticipation?: boolean | UserCountOutputTypeCountVotingParticipationArgs
   }
 
   // Custom InputTypes
@@ -1135,6 +1220,13 @@ export namespace Prisma {
     where?: VoteWhereInput
   }
 
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountVotingParticipationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VotingParticipationWhereInput
+  }
+
 
   /**
    * Count Type VotingPoolCountOutputType
@@ -1143,11 +1235,13 @@ export namespace Prisma {
   export type VotingPoolCountOutputType = {
     options: number
     votes: number
+    participation: number
   }
 
   export type VotingPoolCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     options?: boolean | VotingPoolCountOutputTypeCountOptionsArgs
     votes?: boolean | VotingPoolCountOutputTypeCountVotesArgs
+    participation?: boolean | VotingPoolCountOutputTypeCountParticipationArgs
   }
 
   // Custom InputTypes
@@ -1173,6 +1267,13 @@ export namespace Prisma {
    */
   export type VotingPoolCountOutputTypeCountVotesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: VoteWhereInput
+  }
+
+  /**
+   * VotingPoolCountOutputType without action
+   */
+  export type VotingPoolCountOutputTypeCountParticipationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VotingParticipationWhereInput
   }
 
 
@@ -1217,8 +1318,18 @@ export namespace Prisma {
 
   export type AggregateUser = {
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
+  }
+
+  export type UserAvgAggregateOutputType = {
+    role: number | null
+  }
+
+  export type UserSumAggregateOutputType = {
+    role: number | null
   }
 
   export type UserMinAggregateOutputType = {
@@ -1228,6 +1339,7 @@ export namespace Prisma {
     email: string | null
     password: string | null
     avatarImage: Uint8Array | null
+    role: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -1239,6 +1351,7 @@ export namespace Prisma {
     email: string | null
     password: string | null
     avatarImage: Uint8Array | null
+    role: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -1250,11 +1363,20 @@ export namespace Prisma {
     email: number
     password: number
     avatarImage: number
+    role: number
     createdAt: number
     updatedAt: number
     _all: number
   }
 
+
+  export type UserAvgAggregateInputType = {
+    role?: true
+  }
+
+  export type UserSumAggregateInputType = {
+    role?: true
+  }
 
   export type UserMinAggregateInputType = {
     id?: true
@@ -1263,6 +1385,7 @@ export namespace Prisma {
     email?: true
     password?: true
     avatarImage?: true
+    role?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -1274,6 +1397,7 @@ export namespace Prisma {
     email?: true
     password?: true
     avatarImage?: true
+    role?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -1285,6 +1409,7 @@ export namespace Prisma {
     email?: true
     password?: true
     avatarImage?: true
+    role?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -1328,6 +1453,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: UserAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: UserMinAggregateInputType
@@ -1358,6 +1495,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: UserCountAggregateInputType | true
+    _avg?: UserAvgAggregateInputType
+    _sum?: UserSumAggregateInputType
     _min?: UserMinAggregateInputType
     _max?: UserMaxAggregateInputType
   }
@@ -1369,9 +1508,12 @@ export namespace Prisma {
     email: string
     password: string
     avatarImage: Uint8Array | null
+    role: number
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
   }
@@ -1397,9 +1539,11 @@ export namespace Prisma {
     email?: boolean
     password?: boolean
     avatarImage?: boolean
+    role?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     votes?: boolean | User$votesArgs<ExtArgs>
+    votingParticipation?: boolean | User$votingParticipationArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -1412,13 +1556,15 @@ export namespace Prisma {
     email?: boolean
     password?: boolean
     avatarImage?: boolean
+    role?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "cpf" | "email" | "password" | "avatarImage" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "cpf" | "email" | "password" | "avatarImage" | "role" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     votes?: boolean | User$votesArgs<ExtArgs>
+    votingParticipation?: boolean | User$votingParticipationArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -1426,6 +1572,7 @@ export namespace Prisma {
     name: "User"
     objects: {
       votes: Prisma.$VotePayload<ExtArgs>[]
+      votingParticipation: Prisma.$VotingParticipationPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -1434,6 +1581,7 @@ export namespace Prisma {
       email: string
       password: string
       avatarImage: Uint8Array | null
+      role: number
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -1777,6 +1925,7 @@ export namespace Prisma {
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     votes<T extends User$votesArgs<ExtArgs> = {}>(args?: Subset<T, User$votesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    votingParticipation<T extends User$votingParticipationArgs<ExtArgs> = {}>(args?: Subset<T, User$votingParticipationArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VotingParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1812,6 +1961,7 @@ export namespace Prisma {
     readonly email: FieldRef<"User", 'String'>
     readonly password: FieldRef<"User", 'String'>
     readonly avatarImage: FieldRef<"User", 'Bytes'>
+    readonly role: FieldRef<"User", 'Int'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -2181,6 +2331,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.votingParticipation
+   */
+  export type User$votingParticipationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VotingParticipation
+     */
+    select?: VotingParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VotingParticipation
+     */
+    omit?: VotingParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VotingParticipationInclude<ExtArgs> | null
+    where?: VotingParticipationWhereInput
+    orderBy?: VotingParticipationOrderByWithRelationInput | VotingParticipationOrderByWithRelationInput[]
+    cursor?: VotingParticipationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VotingParticipationScalarFieldEnum | VotingParticipationScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2475,6 +2649,7 @@ export namespace Prisma {
     address?: boolean
     options?: boolean | VotingPool$optionsArgs<ExtArgs>
     votes?: boolean | VotingPool$votesArgs<ExtArgs>
+    participation?: boolean | VotingPool$participationArgs<ExtArgs>
     _count?: boolean | VotingPoolCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["votingPool"]>
 
@@ -2501,6 +2676,7 @@ export namespace Prisma {
   export type VotingPoolInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     options?: boolean | VotingPool$optionsArgs<ExtArgs>
     votes?: boolean | VotingPool$votesArgs<ExtArgs>
+    participation?: boolean | VotingPool$participationArgs<ExtArgs>
     _count?: boolean | VotingPoolCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -2509,6 +2685,7 @@ export namespace Prisma {
     objects: {
       options: Prisma.$VotingOptionPayload<ExtArgs>[]
       votes: Prisma.$VotePayload<ExtArgs>[]
+      participation: Prisma.$VotingParticipationPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -2867,6 +3044,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     options<T extends VotingPool$optionsArgs<ExtArgs> = {}>(args?: Subset<T, VotingPool$optionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VotingOptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     votes<T extends VotingPool$votesArgs<ExtArgs> = {}>(args?: Subset<T, VotingPool$votesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    participation<T extends VotingPool$participationArgs<ExtArgs> = {}>(args?: Subset<T, VotingPool$participationArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VotingParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3298,6 +3476,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: VoteScalarFieldEnum | VoteScalarFieldEnum[]
+  }
+
+  /**
+   * VotingPool.participation
+   */
+  export type VotingPool$participationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VotingParticipation
+     */
+    select?: VotingParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VotingParticipation
+     */
+    omit?: VotingParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VotingParticipationInclude<ExtArgs> | null
+    where?: VotingParticipationWhereInput
+    orderBy?: VotingParticipationOrderByWithRelationInput | VotingParticipationOrderByWithRelationInput[]
+    cursor?: VotingParticipationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VotingParticipationScalarFieldEnum | VotingParticipationScalarFieldEnum[]
   }
 
   /**
@@ -5235,6 +5437,928 @@ export namespace Prisma {
 
 
   /**
+   * Model VotingParticipation
+   */
+
+  export type AggregateVotingParticipation = {
+    _count: VotingParticipationCountAggregateOutputType | null
+    _min: VotingParticipationMinAggregateOutputType | null
+    _max: VotingParticipationMaxAggregateOutputType | null
+  }
+
+  export type VotingParticipationMinAggregateOutputType = {
+    id: string | null
+    timestamp: Date | null
+    userId: string | null
+    poolId: string | null
+  }
+
+  export type VotingParticipationMaxAggregateOutputType = {
+    id: string | null
+    timestamp: Date | null
+    userId: string | null
+    poolId: string | null
+  }
+
+  export type VotingParticipationCountAggregateOutputType = {
+    id: number
+    timestamp: number
+    userId: number
+    poolId: number
+    _all: number
+  }
+
+
+  export type VotingParticipationMinAggregateInputType = {
+    id?: true
+    timestamp?: true
+    userId?: true
+    poolId?: true
+  }
+
+  export type VotingParticipationMaxAggregateInputType = {
+    id?: true
+    timestamp?: true
+    userId?: true
+    poolId?: true
+  }
+
+  export type VotingParticipationCountAggregateInputType = {
+    id?: true
+    timestamp?: true
+    userId?: true
+    poolId?: true
+    _all?: true
+  }
+
+  export type VotingParticipationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VotingParticipation to aggregate.
+     */
+    where?: VotingParticipationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VotingParticipations to fetch.
+     */
+    orderBy?: VotingParticipationOrderByWithRelationInput | VotingParticipationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: VotingParticipationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VotingParticipations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VotingParticipations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned VotingParticipations
+    **/
+    _count?: true | VotingParticipationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: VotingParticipationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: VotingParticipationMaxAggregateInputType
+  }
+
+  export type GetVotingParticipationAggregateType<T extends VotingParticipationAggregateArgs> = {
+        [P in keyof T & keyof AggregateVotingParticipation]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVotingParticipation[P]>
+      : GetScalarType<T[P], AggregateVotingParticipation[P]>
+  }
+
+
+
+
+  export type VotingParticipationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VotingParticipationWhereInput
+    orderBy?: VotingParticipationOrderByWithAggregationInput | VotingParticipationOrderByWithAggregationInput[]
+    by: VotingParticipationScalarFieldEnum[] | VotingParticipationScalarFieldEnum
+    having?: VotingParticipationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: VotingParticipationCountAggregateInputType | true
+    _min?: VotingParticipationMinAggregateInputType
+    _max?: VotingParticipationMaxAggregateInputType
+  }
+
+  export type VotingParticipationGroupByOutputType = {
+    id: string
+    timestamp: Date
+    userId: string
+    poolId: string
+    _count: VotingParticipationCountAggregateOutputType | null
+    _min: VotingParticipationMinAggregateOutputType | null
+    _max: VotingParticipationMaxAggregateOutputType | null
+  }
+
+  type GetVotingParticipationGroupByPayload<T extends VotingParticipationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<VotingParticipationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof VotingParticipationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], VotingParticipationGroupByOutputType[P]>
+            : GetScalarType<T[P], VotingParticipationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type VotingParticipationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    timestamp?: boolean
+    userId?: boolean
+    poolId?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    votingPool?: boolean | VotingPoolDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["votingParticipation"]>
+
+
+
+  export type VotingParticipationSelectScalar = {
+    id?: boolean
+    timestamp?: boolean
+    userId?: boolean
+    poolId?: boolean
+  }
+
+  export type VotingParticipationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "timestamp" | "userId" | "poolId", ExtArgs["result"]["votingParticipation"]>
+  export type VotingParticipationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    votingPool?: boolean | VotingPoolDefaultArgs<ExtArgs>
+  }
+
+  export type $VotingParticipationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "VotingParticipation"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+      votingPool: Prisma.$VotingPoolPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      timestamp: Date
+      userId: string
+      poolId: string
+    }, ExtArgs["result"]["votingParticipation"]>
+    composites: {}
+  }
+
+  type VotingParticipationGetPayload<S extends boolean | null | undefined | VotingParticipationDefaultArgs> = $Result.GetResult<Prisma.$VotingParticipationPayload, S>
+
+  type VotingParticipationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<VotingParticipationFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: VotingParticipationCountAggregateInputType | true
+    }
+
+  export interface VotingParticipationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['VotingParticipation'], meta: { name: 'VotingParticipation' } }
+    /**
+     * Find zero or one VotingParticipation that matches the filter.
+     * @param {VotingParticipationFindUniqueArgs} args - Arguments to find a VotingParticipation
+     * @example
+     * // Get one VotingParticipation
+     * const votingParticipation = await prisma.votingParticipation.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends VotingParticipationFindUniqueArgs>(args: SelectSubset<T, VotingParticipationFindUniqueArgs<ExtArgs>>): Prisma__VotingParticipationClient<$Result.GetResult<Prisma.$VotingParticipationPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one VotingParticipation that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {VotingParticipationFindUniqueOrThrowArgs} args - Arguments to find a VotingParticipation
+     * @example
+     * // Get one VotingParticipation
+     * const votingParticipation = await prisma.votingParticipation.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends VotingParticipationFindUniqueOrThrowArgs>(args: SelectSubset<T, VotingParticipationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__VotingParticipationClient<$Result.GetResult<Prisma.$VotingParticipationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first VotingParticipation that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VotingParticipationFindFirstArgs} args - Arguments to find a VotingParticipation
+     * @example
+     * // Get one VotingParticipation
+     * const votingParticipation = await prisma.votingParticipation.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends VotingParticipationFindFirstArgs>(args?: SelectSubset<T, VotingParticipationFindFirstArgs<ExtArgs>>): Prisma__VotingParticipationClient<$Result.GetResult<Prisma.$VotingParticipationPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first VotingParticipation that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VotingParticipationFindFirstOrThrowArgs} args - Arguments to find a VotingParticipation
+     * @example
+     * // Get one VotingParticipation
+     * const votingParticipation = await prisma.votingParticipation.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends VotingParticipationFindFirstOrThrowArgs>(args?: SelectSubset<T, VotingParticipationFindFirstOrThrowArgs<ExtArgs>>): Prisma__VotingParticipationClient<$Result.GetResult<Prisma.$VotingParticipationPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more VotingParticipations that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VotingParticipationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all VotingParticipations
+     * const votingParticipations = await prisma.votingParticipation.findMany()
+     * 
+     * // Get first 10 VotingParticipations
+     * const votingParticipations = await prisma.votingParticipation.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const votingParticipationWithIdOnly = await prisma.votingParticipation.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends VotingParticipationFindManyArgs>(args?: SelectSubset<T, VotingParticipationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VotingParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a VotingParticipation.
+     * @param {VotingParticipationCreateArgs} args - Arguments to create a VotingParticipation.
+     * @example
+     * // Create one VotingParticipation
+     * const VotingParticipation = await prisma.votingParticipation.create({
+     *   data: {
+     *     // ... data to create a VotingParticipation
+     *   }
+     * })
+     * 
+     */
+    create<T extends VotingParticipationCreateArgs>(args: SelectSubset<T, VotingParticipationCreateArgs<ExtArgs>>): Prisma__VotingParticipationClient<$Result.GetResult<Prisma.$VotingParticipationPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many VotingParticipations.
+     * @param {VotingParticipationCreateManyArgs} args - Arguments to create many VotingParticipations.
+     * @example
+     * // Create many VotingParticipations
+     * const votingParticipation = await prisma.votingParticipation.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends VotingParticipationCreateManyArgs>(args?: SelectSubset<T, VotingParticipationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a VotingParticipation.
+     * @param {VotingParticipationDeleteArgs} args - Arguments to delete one VotingParticipation.
+     * @example
+     * // Delete one VotingParticipation
+     * const VotingParticipation = await prisma.votingParticipation.delete({
+     *   where: {
+     *     // ... filter to delete one VotingParticipation
+     *   }
+     * })
+     * 
+     */
+    delete<T extends VotingParticipationDeleteArgs>(args: SelectSubset<T, VotingParticipationDeleteArgs<ExtArgs>>): Prisma__VotingParticipationClient<$Result.GetResult<Prisma.$VotingParticipationPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one VotingParticipation.
+     * @param {VotingParticipationUpdateArgs} args - Arguments to update one VotingParticipation.
+     * @example
+     * // Update one VotingParticipation
+     * const votingParticipation = await prisma.votingParticipation.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends VotingParticipationUpdateArgs>(args: SelectSubset<T, VotingParticipationUpdateArgs<ExtArgs>>): Prisma__VotingParticipationClient<$Result.GetResult<Prisma.$VotingParticipationPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more VotingParticipations.
+     * @param {VotingParticipationDeleteManyArgs} args - Arguments to filter VotingParticipations to delete.
+     * @example
+     * // Delete a few VotingParticipations
+     * const { count } = await prisma.votingParticipation.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends VotingParticipationDeleteManyArgs>(args?: SelectSubset<T, VotingParticipationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more VotingParticipations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VotingParticipationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many VotingParticipations
+     * const votingParticipation = await prisma.votingParticipation.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends VotingParticipationUpdateManyArgs>(args: SelectSubset<T, VotingParticipationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one VotingParticipation.
+     * @param {VotingParticipationUpsertArgs} args - Arguments to update or create a VotingParticipation.
+     * @example
+     * // Update or create a VotingParticipation
+     * const votingParticipation = await prisma.votingParticipation.upsert({
+     *   create: {
+     *     // ... data to create a VotingParticipation
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the VotingParticipation we want to update
+     *   }
+     * })
+     */
+    upsert<T extends VotingParticipationUpsertArgs>(args: SelectSubset<T, VotingParticipationUpsertArgs<ExtArgs>>): Prisma__VotingParticipationClient<$Result.GetResult<Prisma.$VotingParticipationPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of VotingParticipations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VotingParticipationCountArgs} args - Arguments to filter VotingParticipations to count.
+     * @example
+     * // Count the number of VotingParticipations
+     * const count = await prisma.votingParticipation.count({
+     *   where: {
+     *     // ... the filter for the VotingParticipations we want to count
+     *   }
+     * })
+    **/
+    count<T extends VotingParticipationCountArgs>(
+      args?: Subset<T, VotingParticipationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], VotingParticipationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a VotingParticipation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VotingParticipationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends VotingParticipationAggregateArgs>(args: Subset<T, VotingParticipationAggregateArgs>): Prisma.PrismaPromise<GetVotingParticipationAggregateType<T>>
+
+    /**
+     * Group by VotingParticipation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VotingParticipationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends VotingParticipationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: VotingParticipationGroupByArgs['orderBy'] }
+        : { orderBy?: VotingParticipationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, VotingParticipationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVotingParticipationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the VotingParticipation model
+   */
+  readonly fields: VotingParticipationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for VotingParticipation.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__VotingParticipationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    votingPool<T extends VotingPoolDefaultArgs<ExtArgs> = {}>(args?: Subset<T, VotingPoolDefaultArgs<ExtArgs>>): Prisma__VotingPoolClient<$Result.GetResult<Prisma.$VotingPoolPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the VotingParticipation model
+   */
+  interface VotingParticipationFieldRefs {
+    readonly id: FieldRef<"VotingParticipation", 'String'>
+    readonly timestamp: FieldRef<"VotingParticipation", 'DateTime'>
+    readonly userId: FieldRef<"VotingParticipation", 'String'>
+    readonly poolId: FieldRef<"VotingParticipation", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * VotingParticipation findUnique
+   */
+  export type VotingParticipationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VotingParticipation
+     */
+    select?: VotingParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VotingParticipation
+     */
+    omit?: VotingParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VotingParticipationInclude<ExtArgs> | null
+    /**
+     * Filter, which VotingParticipation to fetch.
+     */
+    where: VotingParticipationWhereUniqueInput
+  }
+
+  /**
+   * VotingParticipation findUniqueOrThrow
+   */
+  export type VotingParticipationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VotingParticipation
+     */
+    select?: VotingParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VotingParticipation
+     */
+    omit?: VotingParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VotingParticipationInclude<ExtArgs> | null
+    /**
+     * Filter, which VotingParticipation to fetch.
+     */
+    where: VotingParticipationWhereUniqueInput
+  }
+
+  /**
+   * VotingParticipation findFirst
+   */
+  export type VotingParticipationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VotingParticipation
+     */
+    select?: VotingParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VotingParticipation
+     */
+    omit?: VotingParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VotingParticipationInclude<ExtArgs> | null
+    /**
+     * Filter, which VotingParticipation to fetch.
+     */
+    where?: VotingParticipationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VotingParticipations to fetch.
+     */
+    orderBy?: VotingParticipationOrderByWithRelationInput | VotingParticipationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VotingParticipations.
+     */
+    cursor?: VotingParticipationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VotingParticipations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VotingParticipations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VotingParticipations.
+     */
+    distinct?: VotingParticipationScalarFieldEnum | VotingParticipationScalarFieldEnum[]
+  }
+
+  /**
+   * VotingParticipation findFirstOrThrow
+   */
+  export type VotingParticipationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VotingParticipation
+     */
+    select?: VotingParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VotingParticipation
+     */
+    omit?: VotingParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VotingParticipationInclude<ExtArgs> | null
+    /**
+     * Filter, which VotingParticipation to fetch.
+     */
+    where?: VotingParticipationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VotingParticipations to fetch.
+     */
+    orderBy?: VotingParticipationOrderByWithRelationInput | VotingParticipationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VotingParticipations.
+     */
+    cursor?: VotingParticipationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VotingParticipations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VotingParticipations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VotingParticipations.
+     */
+    distinct?: VotingParticipationScalarFieldEnum | VotingParticipationScalarFieldEnum[]
+  }
+
+  /**
+   * VotingParticipation findMany
+   */
+  export type VotingParticipationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VotingParticipation
+     */
+    select?: VotingParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VotingParticipation
+     */
+    omit?: VotingParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VotingParticipationInclude<ExtArgs> | null
+    /**
+     * Filter, which VotingParticipations to fetch.
+     */
+    where?: VotingParticipationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VotingParticipations to fetch.
+     */
+    orderBy?: VotingParticipationOrderByWithRelationInput | VotingParticipationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing VotingParticipations.
+     */
+    cursor?: VotingParticipationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VotingParticipations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VotingParticipations.
+     */
+    skip?: number
+    distinct?: VotingParticipationScalarFieldEnum | VotingParticipationScalarFieldEnum[]
+  }
+
+  /**
+   * VotingParticipation create
+   */
+  export type VotingParticipationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VotingParticipation
+     */
+    select?: VotingParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VotingParticipation
+     */
+    omit?: VotingParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VotingParticipationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a VotingParticipation.
+     */
+    data: XOR<VotingParticipationCreateInput, VotingParticipationUncheckedCreateInput>
+  }
+
+  /**
+   * VotingParticipation createMany
+   */
+  export type VotingParticipationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many VotingParticipations.
+     */
+    data: VotingParticipationCreateManyInput | VotingParticipationCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * VotingParticipation update
+   */
+  export type VotingParticipationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VotingParticipation
+     */
+    select?: VotingParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VotingParticipation
+     */
+    omit?: VotingParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VotingParticipationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a VotingParticipation.
+     */
+    data: XOR<VotingParticipationUpdateInput, VotingParticipationUncheckedUpdateInput>
+    /**
+     * Choose, which VotingParticipation to update.
+     */
+    where: VotingParticipationWhereUniqueInput
+  }
+
+  /**
+   * VotingParticipation updateMany
+   */
+  export type VotingParticipationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update VotingParticipations.
+     */
+    data: XOR<VotingParticipationUpdateManyMutationInput, VotingParticipationUncheckedUpdateManyInput>
+    /**
+     * Filter which VotingParticipations to update
+     */
+    where?: VotingParticipationWhereInput
+    /**
+     * Limit how many VotingParticipations to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * VotingParticipation upsert
+   */
+  export type VotingParticipationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VotingParticipation
+     */
+    select?: VotingParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VotingParticipation
+     */
+    omit?: VotingParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VotingParticipationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the VotingParticipation to update in case it exists.
+     */
+    where: VotingParticipationWhereUniqueInput
+    /**
+     * In case the VotingParticipation found by the `where` argument doesn't exist, create a new VotingParticipation with this data.
+     */
+    create: XOR<VotingParticipationCreateInput, VotingParticipationUncheckedCreateInput>
+    /**
+     * In case the VotingParticipation was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<VotingParticipationUpdateInput, VotingParticipationUncheckedUpdateInput>
+  }
+
+  /**
+   * VotingParticipation delete
+   */
+  export type VotingParticipationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VotingParticipation
+     */
+    select?: VotingParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VotingParticipation
+     */
+    omit?: VotingParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VotingParticipationInclude<ExtArgs> | null
+    /**
+     * Filter which VotingParticipation to delete.
+     */
+    where: VotingParticipationWhereUniqueInput
+  }
+
+  /**
+   * VotingParticipation deleteMany
+   */
+  export type VotingParticipationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VotingParticipations to delete
+     */
+    where?: VotingParticipationWhereInput
+    /**
+     * Limit how many VotingParticipations to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * VotingParticipation without action
+   */
+  export type VotingParticipationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VotingParticipation
+     */
+    select?: VotingParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VotingParticipation
+     */
+    omit?: VotingParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VotingParticipationInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -5255,6 +6379,7 @@ export namespace Prisma {
     email: 'email',
     password: 'password',
     avatarImage: 'avatarImage',
+    role: 'role',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -5302,6 +6427,16 @@ export namespace Prisma {
   };
 
   export type VoteScalarFieldEnum = (typeof VoteScalarFieldEnum)[keyof typeof VoteScalarFieldEnum]
+
+
+  export const VotingParticipationScalarFieldEnum: {
+    id: 'id',
+    timestamp: 'timestamp',
+    userId: 'userId',
+    poolId: 'poolId'
+  };
+
+  export type VotingParticipationScalarFieldEnum = (typeof VotingParticipationScalarFieldEnum)[keyof typeof VotingParticipationScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -5363,6 +6498,15 @@ export namespace Prisma {
   export type VoteOrderByRelevanceFieldEnum = (typeof VoteOrderByRelevanceFieldEnum)[keyof typeof VoteOrderByRelevanceFieldEnum]
 
 
+  export const VotingParticipationOrderByRelevanceFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    poolId: 'poolId'
+  };
+
+  export type VotingParticipationOrderByRelevanceFieldEnum = (typeof VotingParticipationOrderByRelevanceFieldEnum)[keyof typeof VotingParticipationOrderByRelevanceFieldEnum]
+
+
   /**
    * Field references
    */
@@ -5379,6 +6523,13 @@ export namespace Prisma {
    * Reference to a field of type 'Bytes'
    */
   export type BytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int'
+   */
+  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
     
 
 
@@ -5401,13 +6552,6 @@ export namespace Prisma {
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
     
-
-
-  /**
-   * Reference to a field of type 'Int'
-   */
-  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
   /**
    * Deep Input Types
    */
@@ -5423,9 +6567,11 @@ export namespace Prisma {
     email?: StringFilter<"User"> | string
     password?: StringFilter<"User"> | string
     avatarImage?: BytesNullableFilter<"User"> | Uint8Array | null
+    role?: IntFilter<"User"> | number
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     votes?: VoteListRelationFilter
+    votingParticipation?: VotingParticipationListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -5435,9 +6581,11 @@ export namespace Prisma {
     email?: SortOrder
     password?: SortOrder
     avatarImage?: SortOrderInput | SortOrder
+    role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     votes?: VoteOrderByRelationAggregateInput
+    votingParticipation?: VotingParticipationOrderByRelationAggregateInput
     _relevance?: UserOrderByRelevanceInput
   }
 
@@ -5451,9 +6599,11 @@ export namespace Prisma {
     name?: StringFilter<"User"> | string
     password?: StringFilter<"User"> | string
     avatarImage?: BytesNullableFilter<"User"> | Uint8Array | null
+    role?: IntFilter<"User"> | number
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     votes?: VoteListRelationFilter
+    votingParticipation?: VotingParticipationListRelationFilter
   }, "id" | "cpf" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -5463,11 +6613,14 @@ export namespace Prisma {
     email?: SortOrder
     password?: SortOrder
     avatarImage?: SortOrderInput | SortOrder
+    role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
+    _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
+    _sum?: UserSumOrderByAggregateInput
   }
 
   export type UserScalarWhereWithAggregatesInput = {
@@ -5480,6 +6633,7 @@ export namespace Prisma {
     email?: StringWithAggregatesFilter<"User"> | string
     password?: StringWithAggregatesFilter<"User"> | string
     avatarImage?: BytesNullableWithAggregatesFilter<"User"> | Uint8Array | null
+    role?: IntWithAggregatesFilter<"User"> | number
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -5504,6 +6658,7 @@ export namespace Prisma {
     address?: StringNullableFilter<"VotingPool"> | string | null
     options?: VotingOptionListRelationFilter
     votes?: VoteListRelationFilter
+    participation?: VotingParticipationListRelationFilter
   }
 
   export type VotingPoolOrderByWithRelationInput = {
@@ -5523,6 +6678,7 @@ export namespace Prisma {
     address?: SortOrderInput | SortOrder
     options?: VotingOptionOrderByRelationAggregateInput
     votes?: VoteOrderByRelationAggregateInput
+    participation?: VotingParticipationOrderByRelationAggregateInput
     _relevance?: VotingPoolOrderByRelevanceInput
   }
 
@@ -5546,6 +6702,7 @@ export namespace Prisma {
     address?: StringNullableFilter<"VotingPool"> | string | null
     options?: VotingOptionListRelationFilter
     votes?: VoteListRelationFilter
+    participation?: VotingParticipationListRelationFilter
   }, "id">
 
   export type VotingPoolOrderByWithAggregationInput = {
@@ -5712,6 +6869,61 @@ export namespace Prisma {
     optionId?: StringWithAggregatesFilter<"Vote"> | string
   }
 
+  export type VotingParticipationWhereInput = {
+    AND?: VotingParticipationWhereInput | VotingParticipationWhereInput[]
+    OR?: VotingParticipationWhereInput[]
+    NOT?: VotingParticipationWhereInput | VotingParticipationWhereInput[]
+    id?: StringFilter<"VotingParticipation"> | string
+    timestamp?: DateTimeFilter<"VotingParticipation"> | Date | string
+    userId?: StringFilter<"VotingParticipation"> | string
+    poolId?: StringFilter<"VotingParticipation"> | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    votingPool?: XOR<VotingPoolScalarRelationFilter, VotingPoolWhereInput>
+  }
+
+  export type VotingParticipationOrderByWithRelationInput = {
+    id?: SortOrder
+    timestamp?: SortOrder
+    userId?: SortOrder
+    poolId?: SortOrder
+    user?: UserOrderByWithRelationInput
+    votingPool?: VotingPoolOrderByWithRelationInput
+    _relevance?: VotingParticipationOrderByRelevanceInput
+  }
+
+  export type VotingParticipationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    userId_poolId?: VotingParticipationUserIdPoolIdCompoundUniqueInput
+    AND?: VotingParticipationWhereInput | VotingParticipationWhereInput[]
+    OR?: VotingParticipationWhereInput[]
+    NOT?: VotingParticipationWhereInput | VotingParticipationWhereInput[]
+    timestamp?: DateTimeFilter<"VotingParticipation"> | Date | string
+    userId?: StringFilter<"VotingParticipation"> | string
+    poolId?: StringFilter<"VotingParticipation"> | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    votingPool?: XOR<VotingPoolScalarRelationFilter, VotingPoolWhereInput>
+  }, "id" | "userId_poolId">
+
+  export type VotingParticipationOrderByWithAggregationInput = {
+    id?: SortOrder
+    timestamp?: SortOrder
+    userId?: SortOrder
+    poolId?: SortOrder
+    _count?: VotingParticipationCountOrderByAggregateInput
+    _max?: VotingParticipationMaxOrderByAggregateInput
+    _min?: VotingParticipationMinOrderByAggregateInput
+  }
+
+  export type VotingParticipationScalarWhereWithAggregatesInput = {
+    AND?: VotingParticipationScalarWhereWithAggregatesInput | VotingParticipationScalarWhereWithAggregatesInput[]
+    OR?: VotingParticipationScalarWhereWithAggregatesInput[]
+    NOT?: VotingParticipationScalarWhereWithAggregatesInput | VotingParticipationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"VotingParticipation"> | string
+    timestamp?: DateTimeWithAggregatesFilter<"VotingParticipation"> | Date | string
+    userId?: StringWithAggregatesFilter<"VotingParticipation"> | string
+    poolId?: StringWithAggregatesFilter<"VotingParticipation"> | string
+  }
+
   export type UserCreateInput = {
     id?: string
     name: string
@@ -5719,9 +6931,11 @@ export namespace Prisma {
     email: string
     password: string
     avatarImage?: Uint8Array | null
+    role?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     votes?: VoteCreateNestedManyWithoutUserInput
+    votingParticipation?: VotingParticipationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -5731,9 +6945,11 @@ export namespace Prisma {
     email: string
     password: string
     avatarImage?: Uint8Array | null
+    role?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     votes?: VoteUncheckedCreateNestedManyWithoutUserInput
+    votingParticipation?: VotingParticipationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -5743,9 +6959,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     avatarImage?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+    role?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     votes?: VoteUpdateManyWithoutUserNestedInput
+    votingParticipation?: VotingParticipationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -5755,9 +6973,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     avatarImage?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+    role?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     votes?: VoteUncheckedUpdateManyWithoutUserNestedInput
+    votingParticipation?: VotingParticipationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -5767,6 +6987,7 @@ export namespace Prisma {
     email: string
     password: string
     avatarImage?: Uint8Array | null
+    role?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -5778,6 +6999,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     avatarImage?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+    role?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5789,6 +7011,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     avatarImage?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+    role?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5810,6 +7033,7 @@ export namespace Prisma {
     address?: string | null
     options?: VotingOptionCreateNestedManyWithoutVotingPoolInput
     votes?: VoteCreateNestedManyWithoutVotingPoolInput
+    participation?: VotingParticipationCreateNestedManyWithoutVotingPoolInput
   }
 
   export type VotingPoolUncheckedCreateInput = {
@@ -5829,6 +7053,7 @@ export namespace Prisma {
     address?: string | null
     options?: VotingOptionUncheckedCreateNestedManyWithoutVotingPoolInput
     votes?: VoteUncheckedCreateNestedManyWithoutVotingPoolInput
+    participation?: VotingParticipationUncheckedCreateNestedManyWithoutVotingPoolInput
   }
 
   export type VotingPoolUpdateInput = {
@@ -5848,6 +7073,7 @@ export namespace Prisma {
     address?: NullableStringFieldUpdateOperationsInput | string | null
     options?: VotingOptionUpdateManyWithoutVotingPoolNestedInput
     votes?: VoteUpdateManyWithoutVotingPoolNestedInput
+    participation?: VotingParticipationUpdateManyWithoutVotingPoolNestedInput
   }
 
   export type VotingPoolUncheckedUpdateInput = {
@@ -5867,6 +7093,7 @@ export namespace Prisma {
     address?: NullableStringFieldUpdateOperationsInput | string | null
     options?: VotingOptionUncheckedUpdateManyWithoutVotingPoolNestedInput
     votes?: VoteUncheckedUpdateManyWithoutVotingPoolNestedInput
+    participation?: VotingParticipationUncheckedUpdateManyWithoutVotingPoolNestedInput
   }
 
   export type VotingPoolCreateManyInput = {
@@ -6032,6 +7259,53 @@ export namespace Prisma {
     optionId?: StringFieldUpdateOperationsInput | string
   }
 
+  export type VotingParticipationCreateInput = {
+    id?: string
+    timestamp?: Date | string
+    user: UserCreateNestedOneWithoutVotingParticipationInput
+    votingPool: VotingPoolCreateNestedOneWithoutParticipationInput
+  }
+
+  export type VotingParticipationUncheckedCreateInput = {
+    id?: string
+    timestamp?: Date | string
+    userId: string
+    poolId: string
+  }
+
+  export type VotingParticipationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutVotingParticipationNestedInput
+    votingPool?: VotingPoolUpdateOneRequiredWithoutParticipationNestedInput
+  }
+
+  export type VotingParticipationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    userId?: StringFieldUpdateOperationsInput | string
+    poolId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type VotingParticipationCreateManyInput = {
+    id?: string
+    timestamp?: Date | string
+    userId: string
+    poolId: string
+  }
+
+  export type VotingParticipationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VotingParticipationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    userId?: StringFieldUpdateOperationsInput | string
+    poolId?: StringFieldUpdateOperationsInput | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -6054,6 +7328,17 @@ export namespace Prisma {
     not?: NestedBytesNullableFilter<$PrismaModel> | Uint8Array | null
   }
 
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[]
@@ -6071,12 +7356,22 @@ export namespace Prisma {
     none?: VoteWhereInput
   }
 
+  export type VotingParticipationListRelationFilter = {
+    every?: VotingParticipationWhereInput
+    some?: VotingParticipationWhereInput
+    none?: VotingParticipationWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
   }
 
   export type VoteOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type VotingParticipationOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -6093,8 +7388,13 @@ export namespace Prisma {
     email?: SortOrder
     password?: SortOrder
     avatarImage?: SortOrder
+    role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type UserAvgOrderByAggregateInput = {
+    role?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -6104,6 +7404,7 @@ export namespace Prisma {
     email?: SortOrder
     password?: SortOrder
     avatarImage?: SortOrder
+    role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -6115,8 +7416,13 @@ export namespace Prisma {
     email?: SortOrder
     password?: SortOrder
     avatarImage?: SortOrder
+    role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type UserSumOrderByAggregateInput = {
+    role?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -6145,6 +7451,22 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedBytesNullableFilter<$PrismaModel>
     _max?: NestedBytesNullableFilter<$PrismaModel>
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
   }
 
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -6391,11 +7713,55 @@ export namespace Prisma {
     optionId?: SortOrder
   }
 
+  export type UserScalarRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
+  }
+
+  export type VotingParticipationOrderByRelevanceInput = {
+    fields: VotingParticipationOrderByRelevanceFieldEnum | VotingParticipationOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type VotingParticipationUserIdPoolIdCompoundUniqueInput = {
+    userId: string
+    poolId: string
+  }
+
+  export type VotingParticipationCountOrderByAggregateInput = {
+    id?: SortOrder
+    timestamp?: SortOrder
+    userId?: SortOrder
+    poolId?: SortOrder
+  }
+
+  export type VotingParticipationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    timestamp?: SortOrder
+    userId?: SortOrder
+    poolId?: SortOrder
+  }
+
+  export type VotingParticipationMinOrderByAggregateInput = {
+    id?: SortOrder
+    timestamp?: SortOrder
+    userId?: SortOrder
+    poolId?: SortOrder
+  }
+
   export type VoteCreateNestedManyWithoutUserInput = {
     create?: XOR<VoteCreateWithoutUserInput, VoteUncheckedCreateWithoutUserInput> | VoteCreateWithoutUserInput[] | VoteUncheckedCreateWithoutUserInput[]
     connectOrCreate?: VoteCreateOrConnectWithoutUserInput | VoteCreateOrConnectWithoutUserInput[]
     createMany?: VoteCreateManyUserInputEnvelope
     connect?: VoteWhereUniqueInput | VoteWhereUniqueInput[]
+  }
+
+  export type VotingParticipationCreateNestedManyWithoutUserInput = {
+    create?: XOR<VotingParticipationCreateWithoutUserInput, VotingParticipationUncheckedCreateWithoutUserInput> | VotingParticipationCreateWithoutUserInput[] | VotingParticipationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: VotingParticipationCreateOrConnectWithoutUserInput | VotingParticipationCreateOrConnectWithoutUserInput[]
+    createMany?: VotingParticipationCreateManyUserInputEnvelope
+    connect?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
   }
 
   export type VoteUncheckedCreateNestedManyWithoutUserInput = {
@@ -6405,12 +7771,27 @@ export namespace Prisma {
     connect?: VoteWhereUniqueInput | VoteWhereUniqueInput[]
   }
 
+  export type VotingParticipationUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<VotingParticipationCreateWithoutUserInput, VotingParticipationUncheckedCreateWithoutUserInput> | VotingParticipationCreateWithoutUserInput[] | VotingParticipationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: VotingParticipationCreateOrConnectWithoutUserInput | VotingParticipationCreateOrConnectWithoutUserInput[]
+    createMany?: VotingParticipationCreateManyUserInputEnvelope
+    connect?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
 
   export type NullableBytesFieldUpdateOperationsInput = {
     set?: Uint8Array | null
+  }
+
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
   }
 
   export type DateTimeFieldUpdateOperationsInput = {
@@ -6431,6 +7812,20 @@ export namespace Prisma {
     deleteMany?: VoteScalarWhereInput | VoteScalarWhereInput[]
   }
 
+  export type VotingParticipationUpdateManyWithoutUserNestedInput = {
+    create?: XOR<VotingParticipationCreateWithoutUserInput, VotingParticipationUncheckedCreateWithoutUserInput> | VotingParticipationCreateWithoutUserInput[] | VotingParticipationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: VotingParticipationCreateOrConnectWithoutUserInput | VotingParticipationCreateOrConnectWithoutUserInput[]
+    upsert?: VotingParticipationUpsertWithWhereUniqueWithoutUserInput | VotingParticipationUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: VotingParticipationCreateManyUserInputEnvelope
+    set?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    disconnect?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    delete?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    connect?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    update?: VotingParticipationUpdateWithWhereUniqueWithoutUserInput | VotingParticipationUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: VotingParticipationUpdateManyWithWhereWithoutUserInput | VotingParticipationUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: VotingParticipationScalarWhereInput | VotingParticipationScalarWhereInput[]
+  }
+
   export type VoteUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<VoteCreateWithoutUserInput, VoteUncheckedCreateWithoutUserInput> | VoteCreateWithoutUserInput[] | VoteUncheckedCreateWithoutUserInput[]
     connectOrCreate?: VoteCreateOrConnectWithoutUserInput | VoteCreateOrConnectWithoutUserInput[]
@@ -6443,6 +7838,20 @@ export namespace Prisma {
     update?: VoteUpdateWithWhereUniqueWithoutUserInput | VoteUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: VoteUpdateManyWithWhereWithoutUserInput | VoteUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: VoteScalarWhereInput | VoteScalarWhereInput[]
+  }
+
+  export type VotingParticipationUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<VotingParticipationCreateWithoutUserInput, VotingParticipationUncheckedCreateWithoutUserInput> | VotingParticipationCreateWithoutUserInput[] | VotingParticipationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: VotingParticipationCreateOrConnectWithoutUserInput | VotingParticipationCreateOrConnectWithoutUserInput[]
+    upsert?: VotingParticipationUpsertWithWhereUniqueWithoutUserInput | VotingParticipationUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: VotingParticipationCreateManyUserInputEnvelope
+    set?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    disconnect?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    delete?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    connect?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    update?: VotingParticipationUpdateWithWhereUniqueWithoutUserInput | VotingParticipationUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: VotingParticipationUpdateManyWithWhereWithoutUserInput | VotingParticipationUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: VotingParticipationScalarWhereInput | VotingParticipationScalarWhereInput[]
   }
 
   export type VotingOptionCreateNestedManyWithoutVotingPoolInput = {
@@ -6459,6 +7868,13 @@ export namespace Prisma {
     connect?: VoteWhereUniqueInput | VoteWhereUniqueInput[]
   }
 
+  export type VotingParticipationCreateNestedManyWithoutVotingPoolInput = {
+    create?: XOR<VotingParticipationCreateWithoutVotingPoolInput, VotingParticipationUncheckedCreateWithoutVotingPoolInput> | VotingParticipationCreateWithoutVotingPoolInput[] | VotingParticipationUncheckedCreateWithoutVotingPoolInput[]
+    connectOrCreate?: VotingParticipationCreateOrConnectWithoutVotingPoolInput | VotingParticipationCreateOrConnectWithoutVotingPoolInput[]
+    createMany?: VotingParticipationCreateManyVotingPoolInputEnvelope
+    connect?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+  }
+
   export type VotingOptionUncheckedCreateNestedManyWithoutVotingPoolInput = {
     create?: XOR<VotingOptionCreateWithoutVotingPoolInput, VotingOptionUncheckedCreateWithoutVotingPoolInput> | VotingOptionCreateWithoutVotingPoolInput[] | VotingOptionUncheckedCreateWithoutVotingPoolInput[]
     connectOrCreate?: VotingOptionCreateOrConnectWithoutVotingPoolInput | VotingOptionCreateOrConnectWithoutVotingPoolInput[]
@@ -6471,6 +7887,13 @@ export namespace Prisma {
     connectOrCreate?: VoteCreateOrConnectWithoutVotingPoolInput | VoteCreateOrConnectWithoutVotingPoolInput[]
     createMany?: VoteCreateManyVotingPoolInputEnvelope
     connect?: VoteWhereUniqueInput | VoteWhereUniqueInput[]
+  }
+
+  export type VotingParticipationUncheckedCreateNestedManyWithoutVotingPoolInput = {
+    create?: XOR<VotingParticipationCreateWithoutVotingPoolInput, VotingParticipationUncheckedCreateWithoutVotingPoolInput> | VotingParticipationCreateWithoutVotingPoolInput[] | VotingParticipationUncheckedCreateWithoutVotingPoolInput[]
+    connectOrCreate?: VotingParticipationCreateOrConnectWithoutVotingPoolInput | VotingParticipationCreateOrConnectWithoutVotingPoolInput[]
+    createMany?: VotingParticipationCreateManyVotingPoolInputEnvelope
+    connect?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
   }
 
   export type BoolFieldUpdateOperationsInput = {
@@ -6517,6 +7940,20 @@ export namespace Prisma {
     deleteMany?: VoteScalarWhereInput | VoteScalarWhereInput[]
   }
 
+  export type VotingParticipationUpdateManyWithoutVotingPoolNestedInput = {
+    create?: XOR<VotingParticipationCreateWithoutVotingPoolInput, VotingParticipationUncheckedCreateWithoutVotingPoolInput> | VotingParticipationCreateWithoutVotingPoolInput[] | VotingParticipationUncheckedCreateWithoutVotingPoolInput[]
+    connectOrCreate?: VotingParticipationCreateOrConnectWithoutVotingPoolInput | VotingParticipationCreateOrConnectWithoutVotingPoolInput[]
+    upsert?: VotingParticipationUpsertWithWhereUniqueWithoutVotingPoolInput | VotingParticipationUpsertWithWhereUniqueWithoutVotingPoolInput[]
+    createMany?: VotingParticipationCreateManyVotingPoolInputEnvelope
+    set?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    disconnect?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    delete?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    connect?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    update?: VotingParticipationUpdateWithWhereUniqueWithoutVotingPoolInput | VotingParticipationUpdateWithWhereUniqueWithoutVotingPoolInput[]
+    updateMany?: VotingParticipationUpdateManyWithWhereWithoutVotingPoolInput | VotingParticipationUpdateManyWithWhereWithoutVotingPoolInput[]
+    deleteMany?: VotingParticipationScalarWhereInput | VotingParticipationScalarWhereInput[]
+  }
+
   export type VotingOptionUncheckedUpdateManyWithoutVotingPoolNestedInput = {
     create?: XOR<VotingOptionCreateWithoutVotingPoolInput, VotingOptionUncheckedCreateWithoutVotingPoolInput> | VotingOptionCreateWithoutVotingPoolInput[] | VotingOptionUncheckedCreateWithoutVotingPoolInput[]
     connectOrCreate?: VotingOptionCreateOrConnectWithoutVotingPoolInput | VotingOptionCreateOrConnectWithoutVotingPoolInput[]
@@ -6543,6 +7980,20 @@ export namespace Prisma {
     update?: VoteUpdateWithWhereUniqueWithoutVotingPoolInput | VoteUpdateWithWhereUniqueWithoutVotingPoolInput[]
     updateMany?: VoteUpdateManyWithWhereWithoutVotingPoolInput | VoteUpdateManyWithWhereWithoutVotingPoolInput[]
     deleteMany?: VoteScalarWhereInput | VoteScalarWhereInput[]
+  }
+
+  export type VotingParticipationUncheckedUpdateManyWithoutVotingPoolNestedInput = {
+    create?: XOR<VotingParticipationCreateWithoutVotingPoolInput, VotingParticipationUncheckedCreateWithoutVotingPoolInput> | VotingParticipationCreateWithoutVotingPoolInput[] | VotingParticipationUncheckedCreateWithoutVotingPoolInput[]
+    connectOrCreate?: VotingParticipationCreateOrConnectWithoutVotingPoolInput | VotingParticipationCreateOrConnectWithoutVotingPoolInput[]
+    upsert?: VotingParticipationUpsertWithWhereUniqueWithoutVotingPoolInput | VotingParticipationUpsertWithWhereUniqueWithoutVotingPoolInput[]
+    createMany?: VotingParticipationCreateManyVotingPoolInputEnvelope
+    set?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    disconnect?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    delete?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    connect?: VotingParticipationWhereUniqueInput | VotingParticipationWhereUniqueInput[]
+    update?: VotingParticipationUpdateWithWhereUniqueWithoutVotingPoolInput | VotingParticipationUpdateWithWhereUniqueWithoutVotingPoolInput[]
+    updateMany?: VotingParticipationUpdateManyWithWhereWithoutVotingPoolInput | VotingParticipationUpdateManyWithWhereWithoutVotingPoolInput[]
+    deleteMany?: VotingParticipationScalarWhereInput | VotingParticipationScalarWhereInput[]
   }
 
   export type VotingPoolCreateNestedOneWithoutOptionsInput = {
@@ -6645,6 +8096,34 @@ export namespace Prisma {
     update?: XOR<XOR<VotingOptionUpdateToOneWithWhereWithoutVotesInput, VotingOptionUpdateWithoutVotesInput>, VotingOptionUncheckedUpdateWithoutVotesInput>
   }
 
+  export type UserCreateNestedOneWithoutVotingParticipationInput = {
+    create?: XOR<UserCreateWithoutVotingParticipationInput, UserUncheckedCreateWithoutVotingParticipationInput>
+    connectOrCreate?: UserCreateOrConnectWithoutVotingParticipationInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type VotingPoolCreateNestedOneWithoutParticipationInput = {
+    create?: XOR<VotingPoolCreateWithoutParticipationInput, VotingPoolUncheckedCreateWithoutParticipationInput>
+    connectOrCreate?: VotingPoolCreateOrConnectWithoutParticipationInput
+    connect?: VotingPoolWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutVotingParticipationNestedInput = {
+    create?: XOR<UserCreateWithoutVotingParticipationInput, UserUncheckedCreateWithoutVotingParticipationInput>
+    connectOrCreate?: UserCreateOrConnectWithoutVotingParticipationInput
+    upsert?: UserUpsertWithoutVotingParticipationInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutVotingParticipationInput, UserUpdateWithoutVotingParticipationInput>, UserUncheckedUpdateWithoutVotingParticipationInput>
+  }
+
+  export type VotingPoolUpdateOneRequiredWithoutParticipationNestedInput = {
+    create?: XOR<VotingPoolCreateWithoutParticipationInput, VotingPoolUncheckedCreateWithoutParticipationInput>
+    connectOrCreate?: VotingPoolCreateOrConnectWithoutParticipationInput
+    upsert?: VotingPoolUpsertWithoutParticipationInput
+    connect?: VotingPoolWhereUniqueInput
+    update?: XOR<XOR<VotingPoolUpdateToOneWithWhereWithoutParticipationInput, VotingPoolUpdateWithoutParticipationInput>, VotingPoolUncheckedUpdateWithoutParticipationInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -6665,6 +8144,17 @@ export namespace Prisma {
     in?: Uint8Array[] | null
     notIn?: Uint8Array[] | null
     not?: NestedBytesNullableFilter<$PrismaModel> | Uint8Array | null
+  }
+
+  export type NestedIntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
   }
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
@@ -6696,17 +8186,6 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>
   }
 
-  export type NestedIntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
-  }
-
   export type NestedBytesNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Uint8Array | BytesFieldRefInput<$PrismaModel> | null
     in?: Uint8Array[] | null
@@ -6726,6 +8205,33 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type NestedFloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
   }
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -6839,6 +8345,28 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type VotingParticipationCreateWithoutUserInput = {
+    id?: string
+    timestamp?: Date | string
+    votingPool: VotingPoolCreateNestedOneWithoutParticipationInput
+  }
+
+  export type VotingParticipationUncheckedCreateWithoutUserInput = {
+    id?: string
+    timestamp?: Date | string
+    poolId: string
+  }
+
+  export type VotingParticipationCreateOrConnectWithoutUserInput = {
+    where: VotingParticipationWhereUniqueInput
+    create: XOR<VotingParticipationCreateWithoutUserInput, VotingParticipationUncheckedCreateWithoutUserInput>
+  }
+
+  export type VotingParticipationCreateManyUserInputEnvelope = {
+    data: VotingParticipationCreateManyUserInput | VotingParticipationCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type VoteUpsertWithWhereUniqueWithoutUserInput = {
     where: VoteWhereUniqueInput
     update: XOR<VoteUpdateWithoutUserInput, VoteUncheckedUpdateWithoutUserInput>
@@ -6864,6 +8392,32 @@ export namespace Prisma {
     userId?: StringNullableFilter<"Vote"> | string | null
     poolId?: StringFilter<"Vote"> | string
     optionId?: StringFilter<"Vote"> | string
+  }
+
+  export type VotingParticipationUpsertWithWhereUniqueWithoutUserInput = {
+    where: VotingParticipationWhereUniqueInput
+    update: XOR<VotingParticipationUpdateWithoutUserInput, VotingParticipationUncheckedUpdateWithoutUserInput>
+    create: XOR<VotingParticipationCreateWithoutUserInput, VotingParticipationUncheckedCreateWithoutUserInput>
+  }
+
+  export type VotingParticipationUpdateWithWhereUniqueWithoutUserInput = {
+    where: VotingParticipationWhereUniqueInput
+    data: XOR<VotingParticipationUpdateWithoutUserInput, VotingParticipationUncheckedUpdateWithoutUserInput>
+  }
+
+  export type VotingParticipationUpdateManyWithWhereWithoutUserInput = {
+    where: VotingParticipationScalarWhereInput
+    data: XOR<VotingParticipationUpdateManyMutationInput, VotingParticipationUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type VotingParticipationScalarWhereInput = {
+    AND?: VotingParticipationScalarWhereInput | VotingParticipationScalarWhereInput[]
+    OR?: VotingParticipationScalarWhereInput[]
+    NOT?: VotingParticipationScalarWhereInput | VotingParticipationScalarWhereInput[]
+    id?: StringFilter<"VotingParticipation"> | string
+    timestamp?: DateTimeFilter<"VotingParticipation"> | Date | string
+    userId?: StringFilter<"VotingParticipation"> | string
+    poolId?: StringFilter<"VotingParticipation"> | string
   }
 
   export type VotingOptionCreateWithoutVotingPoolInput = {
@@ -6916,6 +8470,28 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type VotingParticipationCreateWithoutVotingPoolInput = {
+    id?: string
+    timestamp?: Date | string
+    user: UserCreateNestedOneWithoutVotingParticipationInput
+  }
+
+  export type VotingParticipationUncheckedCreateWithoutVotingPoolInput = {
+    id?: string
+    timestamp?: Date | string
+    userId: string
+  }
+
+  export type VotingParticipationCreateOrConnectWithoutVotingPoolInput = {
+    where: VotingParticipationWhereUniqueInput
+    create: XOR<VotingParticipationCreateWithoutVotingPoolInput, VotingParticipationUncheckedCreateWithoutVotingPoolInput>
+  }
+
+  export type VotingParticipationCreateManyVotingPoolInputEnvelope = {
+    data: VotingParticipationCreateManyVotingPoolInput | VotingParticipationCreateManyVotingPoolInput[]
+    skipDuplicates?: boolean
+  }
+
   export type VotingOptionUpsertWithWhereUniqueWithoutVotingPoolInput = {
     where: VotingOptionWhereUniqueInput
     update: XOR<VotingOptionUpdateWithoutVotingPoolInput, VotingOptionUncheckedUpdateWithoutVotingPoolInput>
@@ -6959,6 +8535,22 @@ export namespace Prisma {
     data: XOR<VoteUpdateManyMutationInput, VoteUncheckedUpdateManyWithoutVotingPoolInput>
   }
 
+  export type VotingParticipationUpsertWithWhereUniqueWithoutVotingPoolInput = {
+    where: VotingParticipationWhereUniqueInput
+    update: XOR<VotingParticipationUpdateWithoutVotingPoolInput, VotingParticipationUncheckedUpdateWithoutVotingPoolInput>
+    create: XOR<VotingParticipationCreateWithoutVotingPoolInput, VotingParticipationUncheckedCreateWithoutVotingPoolInput>
+  }
+
+  export type VotingParticipationUpdateWithWhereUniqueWithoutVotingPoolInput = {
+    where: VotingParticipationWhereUniqueInput
+    data: XOR<VotingParticipationUpdateWithoutVotingPoolInput, VotingParticipationUncheckedUpdateWithoutVotingPoolInput>
+  }
+
+  export type VotingParticipationUpdateManyWithWhereWithoutVotingPoolInput = {
+    where: VotingParticipationScalarWhereInput
+    data: XOR<VotingParticipationUpdateManyMutationInput, VotingParticipationUncheckedUpdateManyWithoutVotingPoolInput>
+  }
+
   export type VotingPoolCreateWithoutOptionsInput = {
     id?: string
     title: string
@@ -6975,6 +8567,7 @@ export namespace Prisma {
     longitude?: number | null
     address?: string | null
     votes?: VoteCreateNestedManyWithoutVotingPoolInput
+    participation?: VotingParticipationCreateNestedManyWithoutVotingPoolInput
   }
 
   export type VotingPoolUncheckedCreateWithoutOptionsInput = {
@@ -6993,6 +8586,7 @@ export namespace Prisma {
     longitude?: number | null
     address?: string | null
     votes?: VoteUncheckedCreateNestedManyWithoutVotingPoolInput
+    participation?: VotingParticipationUncheckedCreateNestedManyWithoutVotingPoolInput
   }
 
   export type VotingPoolCreateOrConnectWithoutOptionsInput = {
@@ -7051,6 +8645,7 @@ export namespace Prisma {
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     votes?: VoteUpdateManyWithoutVotingPoolNestedInput
+    participation?: VotingParticipationUpdateManyWithoutVotingPoolNestedInput
   }
 
   export type VotingPoolUncheckedUpdateWithoutOptionsInput = {
@@ -7069,6 +8664,7 @@ export namespace Prisma {
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     votes?: VoteUncheckedUpdateManyWithoutVotingPoolNestedInput
+    participation?: VotingParticipationUncheckedUpdateManyWithoutVotingPoolNestedInput
   }
 
   export type VoteUpsertWithWhereUniqueWithoutOptionInput = {
@@ -7094,8 +8690,10 @@ export namespace Prisma {
     email: string
     password: string
     avatarImage?: Uint8Array | null
+    role?: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    votingParticipation?: VotingParticipationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutVotesInput = {
@@ -7105,8 +8703,10 @@ export namespace Prisma {
     email: string
     password: string
     avatarImage?: Uint8Array | null
+    role?: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    votingParticipation?: VotingParticipationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutVotesInput = {
@@ -7130,6 +8730,7 @@ export namespace Prisma {
     longitude?: number | null
     address?: string | null
     options?: VotingOptionCreateNestedManyWithoutVotingPoolInput
+    participation?: VotingParticipationCreateNestedManyWithoutVotingPoolInput
   }
 
   export type VotingPoolUncheckedCreateWithoutVotesInput = {
@@ -7148,6 +8749,7 @@ export namespace Prisma {
     longitude?: number | null
     address?: string | null
     options?: VotingOptionUncheckedCreateNestedManyWithoutVotingPoolInput
+    participation?: VotingParticipationUncheckedCreateNestedManyWithoutVotingPoolInput
   }
 
   export type VotingPoolCreateOrConnectWithoutVotesInput = {
@@ -7194,8 +8796,10 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     avatarImage?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+    role?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    votingParticipation?: VotingParticipationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutVotesInput = {
@@ -7205,8 +8809,10 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     avatarImage?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+    role?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    votingParticipation?: VotingParticipationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type VotingPoolUpsertWithoutVotesInput = {
@@ -7236,6 +8842,7 @@ export namespace Prisma {
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     options?: VotingOptionUpdateManyWithoutVotingPoolNestedInput
+    participation?: VotingParticipationUpdateManyWithoutVotingPoolNestedInput
   }
 
   export type VotingPoolUncheckedUpdateWithoutVotesInput = {
@@ -7254,6 +8861,7 @@ export namespace Prisma {
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     options?: VotingOptionUncheckedUpdateManyWithoutVotingPoolNestedInput
+    participation?: VotingParticipationUncheckedUpdateManyWithoutVotingPoolNestedInput
   }
 
   export type VotingOptionUpsertWithoutVotesInput = {
@@ -7283,11 +8891,177 @@ export namespace Prisma {
     poolId?: StringFieldUpdateOperationsInput | string
   }
 
+  export type UserCreateWithoutVotingParticipationInput = {
+    id?: string
+    name: string
+    cpf: string
+    email: string
+    password: string
+    avatarImage?: Uint8Array | null
+    role?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    votes?: VoteCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutVotingParticipationInput = {
+    id?: string
+    name: string
+    cpf: string
+    email: string
+    password: string
+    avatarImage?: Uint8Array | null
+    role?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    votes?: VoteUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutVotingParticipationInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutVotingParticipationInput, UserUncheckedCreateWithoutVotingParticipationInput>
+  }
+
+  export type VotingPoolCreateWithoutParticipationInput = {
+    id?: string
+    title: string
+    description: string
+    category: string
+    image?: Uint8Array | null
+    startDate: Date | string
+    endDate: Date | string
+    anonymous?: boolean
+    status: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    latitude?: number | null
+    longitude?: number | null
+    address?: string | null
+    options?: VotingOptionCreateNestedManyWithoutVotingPoolInput
+    votes?: VoteCreateNestedManyWithoutVotingPoolInput
+  }
+
+  export type VotingPoolUncheckedCreateWithoutParticipationInput = {
+    id?: string
+    title: string
+    description: string
+    category: string
+    image?: Uint8Array | null
+    startDate: Date | string
+    endDate: Date | string
+    anonymous?: boolean
+    status: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    latitude?: number | null
+    longitude?: number | null
+    address?: string | null
+    options?: VotingOptionUncheckedCreateNestedManyWithoutVotingPoolInput
+    votes?: VoteUncheckedCreateNestedManyWithoutVotingPoolInput
+  }
+
+  export type VotingPoolCreateOrConnectWithoutParticipationInput = {
+    where: VotingPoolWhereUniqueInput
+    create: XOR<VotingPoolCreateWithoutParticipationInput, VotingPoolUncheckedCreateWithoutParticipationInput>
+  }
+
+  export type UserUpsertWithoutVotingParticipationInput = {
+    update: XOR<UserUpdateWithoutVotingParticipationInput, UserUncheckedUpdateWithoutVotingParticipationInput>
+    create: XOR<UserCreateWithoutVotingParticipationInput, UserUncheckedCreateWithoutVotingParticipationInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutVotingParticipationInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutVotingParticipationInput, UserUncheckedUpdateWithoutVotingParticipationInput>
+  }
+
+  export type UserUpdateWithoutVotingParticipationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    cpf?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    avatarImage?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+    role?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    votes?: VoteUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutVotingParticipationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    cpf?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    avatarImage?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+    role?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    votes?: VoteUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type VotingPoolUpsertWithoutParticipationInput = {
+    update: XOR<VotingPoolUpdateWithoutParticipationInput, VotingPoolUncheckedUpdateWithoutParticipationInput>
+    create: XOR<VotingPoolCreateWithoutParticipationInput, VotingPoolUncheckedCreateWithoutParticipationInput>
+    where?: VotingPoolWhereInput
+  }
+
+  export type VotingPoolUpdateToOneWithWhereWithoutParticipationInput = {
+    where?: VotingPoolWhereInput
+    data: XOR<VotingPoolUpdateWithoutParticipationInput, VotingPoolUncheckedUpdateWithoutParticipationInput>
+  }
+
+  export type VotingPoolUpdateWithoutParticipationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    image?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    anonymous?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    options?: VotingOptionUpdateManyWithoutVotingPoolNestedInput
+    votes?: VoteUpdateManyWithoutVotingPoolNestedInput
+  }
+
+  export type VotingPoolUncheckedUpdateWithoutParticipationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    image?: NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    anonymous?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    options?: VotingOptionUncheckedUpdateManyWithoutVotingPoolNestedInput
+    votes?: VoteUncheckedUpdateManyWithoutVotingPoolNestedInput
+  }
+
   export type VoteCreateManyUserInput = {
     id?: string
     timestamp?: Date | string
     poolId: string
     optionId: string
+  }
+
+  export type VotingParticipationCreateManyUserInput = {
+    id?: string
+    timestamp?: Date | string
+    poolId: string
   }
 
   export type VoteUpdateWithoutUserInput = {
@@ -7311,6 +9085,24 @@ export namespace Prisma {
     optionId?: StringFieldUpdateOperationsInput | string
   }
 
+  export type VotingParticipationUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    votingPool?: VotingPoolUpdateOneRequiredWithoutParticipationNestedInput
+  }
+
+  export type VotingParticipationUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    poolId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type VotingParticipationUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    poolId?: StringFieldUpdateOperationsInput | string
+  }
+
   export type VotingOptionCreateManyVotingPoolInput = {
     id?: string
     text: string
@@ -7323,6 +9115,12 @@ export namespace Prisma {
     timestamp?: Date | string
     userId?: string | null
     optionId: string
+  }
+
+  export type VotingParticipationCreateManyVotingPoolInput = {
+    id?: string
+    timestamp?: Date | string
+    userId: string
   }
 
   export type VotingOptionUpdateWithoutVotingPoolInput = {
@@ -7367,6 +9165,24 @@ export namespace Prisma {
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     optionId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type VotingParticipationUpdateWithoutVotingPoolInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutVotingParticipationNestedInput
+  }
+
+  export type VotingParticipationUncheckedUpdateWithoutVotingPoolInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    userId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type VotingParticipationUncheckedUpdateManyWithoutVotingPoolInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    userId?: StringFieldUpdateOperationsInput | string
   }
 
   export type VoteCreateManyOptionInput = {

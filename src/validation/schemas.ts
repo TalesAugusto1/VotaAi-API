@@ -8,6 +8,7 @@ export const registerSchema = z
     email: z.string().email(),
     password: z.string().min(8),
     avatarImage: z.any().optional(),
+    role: z.number().min(1).max(2).optional(), // 1: normal user, 2: admin user
   })
   .passthrough();
 
@@ -31,7 +32,14 @@ export const votingPoolSchema = z
     image: z.any().optional(),
     startDate: z.string(),
     endDate: z.string(),
-    anonymous: z.boolean().default(false),
+    anonymous: z.preprocess((val) => {
+      // Handle different types of input
+      if (typeof val === "string") {
+        // Convert string to boolean
+        return val.toLowerCase() === "true";
+      }
+      return Boolean(val); // Convert any other type to boolean
+    }, z.boolean().default(false)),
     options: z.array(votingOptionSchema).min(2),
     latitude: z.number().optional(),
     longitude: z.number().optional(),
@@ -47,7 +55,14 @@ export const updateVotingPoolSchema = z
     image: z.any().optional(),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
-    anonymous: z.boolean().optional(),
+    anonymous: z.preprocess((val) => {
+      // Handle different types of input
+      if (typeof val === "string") {
+        // Convert string to boolean
+        return val.toLowerCase() === "true";
+      }
+      return Boolean(val); // Convert any other type to boolean
+    }, z.boolean().optional()),
     options: z.array(votingOptionSchema).min(2).optional(),
     status: z.enum(["active", "upcoming", "closed"]).optional(),
     latitude: z.number().optional(),

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   getPoolResults,
-  getUserPoolResults,
+  getUserVotedPoolsResults,
 } from "../controllers/result.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 
@@ -11,6 +11,6 @@ const router = Router();
 router.get("/pools/:poolId", getPoolResults);
 
 // Get results for all pools the user has voted in
-router.get("/pools", authMiddleware, getUserPoolResults);
+router.get("/pools", authMiddleware, getUserVotedPoolsResults);
 
 export default router;

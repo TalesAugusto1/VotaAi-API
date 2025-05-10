@@ -44,17 +44,39 @@ export const uploadOptionImages = (
   next: NextFunction
 ) => {
   // Create an array of fields for option images (option0, option1, etc.)
-  const fields = [];
+  const fields = [{ name: "image" }]; // Add main image field
   // Max 10 options with images
   for (let i = 0; i < 10; i++) {
     fields.push({ name: `option${i}` });
   }
 
+  console.log(
+    `[UPLOAD] Setting up upload with fields: ${fields
+      .map((f) => f.name)
+      .join(", ")}`
+  );
   const uploadMiddleware = upload.fields(fields);
 
   uploadMiddleware(req, res, (err) => {
     if (err) {
+      console.error(`[UPLOAD] Error in uploadOptionImages: ${err.message}`);
       return res.status(400).json({ message: err.message });
+    }
+
+    // Log the files received
+    if (req.files) {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      console.log(
+        `[UPLOAD] Received files for fields: ${Object.keys(files).join(", ")}`
+      );
+
+      // If we have a single 'image' field, set it as req.file for backward compatibility
+      if (files["image"] && files["image"].length > 0) {
+        req.file = files["image"][0];
+        console.log(`[UPLOAD] Set main image file for backward compatibility`);
+      }
+    } else {
+      console.log(`[UPLOAD] No files received`);
     }
 
     // Files are available in req.files
