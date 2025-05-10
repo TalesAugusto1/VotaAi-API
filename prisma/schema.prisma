@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  cpf       String   @unique
+  email     String   @unique
+  password  String
+  avatarImage Bytes?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  votes     Vote[]
+}
+
+model VotingPool {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  category    String
+  image       Bytes?
+  startDate   DateTime
+  endDate     DateTime
+  anonymous   Boolean  @default(false)
+  status      String   // "active", "upcoming", "closed"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  options     VotingOption[]
+  votes       Vote[]
+  
+  // Location data
+  latitude    Float?
+  longitude   Float?
+  address     String?
+}
+
+model VotingOption {
+  id          String   @id @default(uuid())
+  text        String
+  description String?
+  image       Bytes?
+  
+  // Relations
+  votingPool  VotingPool @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  poolId      String
+  votes       Vote[]
+}
+
+model Vote {
+  id         String   @id @default(uuid())
+  timestamp  DateTime @default(now())
+  
+  // Relations - these will be null for anonymous votes
+  user       User?     @relation(fields: [userId], references: [id])
+  userId     String?
+  
+  // Always required
+  votingPool VotingPool @relation(fields: [poolId], references: [id])
+  poolId     String
+  option     VotingOption @relation(fields: [optionId], references: [id])
+  optionId   String
+  
+  @@unique([userId, poolId]) // Ensure one vote per user per poll
+}
