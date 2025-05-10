@@ -3,8 +3,16 @@ import prisma from "../utils/prisma";
 
 // Get all voting pools with optional status filter
 export const getAllVotingPools = async (req: Request, res: Response) => {
+  const status = req.query.status as string | undefined;
+  console.log(
+    `[POOL] Getting all voting pools${
+      status ? ` with status: ${status}` : ""
+    } - User: ${req.user?.id || "Public"}`
+  );
+
   try {
-    const { status } = req.query;
+    // Log query parameters
+    console.log(`[POOL] Query parameters:`, req.query);
 
     const pools = await prisma.votingPool.findMany({
       where: status ? { status: status as string } : undefined,
@@ -27,6 +35,8 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
       },
     });
 
+    console.log(`[POOL] Found ${pools.length} voting pools`);
+
     // Add hasImage flag to each pool
     const poolsWithImageFlags = pools.map((pool) => {
       const { image: _, ...poolData } = pool;
@@ -36,9 +46,12 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
       };
     });
 
+    console.log(
+      `[POOL] Returning ${poolsWithImageFlags.length} voting pools to client`
+    );
     return res.status(200).json(poolsWithImageFlags);
   } catch (error) {
-    console.error("Error fetching voting pools:", error);
+    console.error("[POOL] Error fetching voting pools:", error);
     return res.status(500).json({ message: "Error fetching voting pools" });
   }
 };
@@ -98,6 +111,9 @@ export const getVotingPoolById = async (req: Request, res: Response) => {
 
 // Create a new voting pool
 export const createVotingPool = async (req: Request, res: Response) => {
+  console.log(
+    `[POOL] Create voting pool request - User: ${req.user?.id}, Title: "${req.body.title}"`
+  );
   try {
     const {
       title,
@@ -113,6 +129,21 @@ export const createVotingPool = async (req: Request, res: Response) => {
       address,
     } = req.body;
 
+    console.log(
+      `[POOL] Pool details - Title: "${title}", Category: "${category}", Options: ${
+        options?.length
+      }, HasImage: ${!!image}`
+    );
+    console.log(
+      `[POOL] Dates - Start: ${startDate}, End: ${endDate}, Anonymous: ${anonymous}`
+    );
+
+    if (latitude && longitude) {
+      console.log(
+        `[POOL] Location - Lat: ${latitude}, Long: ${longitude}, Address: "${address}"`
+      );
+    }
+
     // Determine status based on dates
     const now = new Date();
     let status = "upcoming";
@@ -125,9 +156,15 @@ export const createVotingPool = async (req: Request, res: Response) => {
       status = "closed";
     }
 
+    console.log(`[POOL] Calculated status: ${status}`);
+
     // Create voting pool and options in a transaction
+    console.log(
+      `[POOL] Starting database transaction to create pool and options`
+    );
     const votingPool = await prisma.$transaction(async (tx) => {
       // Create the voting pool
+      console.log(`[POOL] Creating pool record`);
       const pool = await tx.votingPool.create({
         data: {
           title,
@@ -143,8 +180,12 @@ export const createVotingPool = async (req: Request, res: Response) => {
           address,
         },
       });
+      console.log(`[POOL] Pool created with ID: ${pool.id}`);
 
       // Create options separately to handle binary images for each option
+      console.log(
+        `[POOL] Creating ${options.length} options for pool ID: ${pool.id}`
+      );
       for (const option of options) {
         await tx.votingOption.create({
           data: {
@@ -155,8 +196,10 @@ export const createVotingPool = async (req: Request, res: Response) => {
           },
         });
       }
+      console.log(`[POOL] All options created successfully`);
 
       // Return the created pool with options
+      console.log(`[POOL] Fetching complete pool data`);
       return await tx.votingPool.findUnique({
         where: { id: pool.id },
         include: {
@@ -172,8 +215,12 @@ export const createVotingPool = async (req: Request, res: Response) => {
     });
 
     if (!votingPool) {
+      console.error(`[POOL] Error: Transaction completed but returned no data`);
       return res.status(500).json({ message: "Error creating voting pool" });
     }
+    console.log(
+      `[POOL] Transaction completed successfully, pool ID: ${votingPool.id}`
+    );
 
     // Add hasImage flags
     const { image: _, ...poolData } = votingPool;
@@ -186,12 +233,15 @@ export const createVotingPool = async (req: Request, res: Response) => {
       })),
     };
 
+    console.log(
+      `[POOL] Voting pool created successfully - ID: ${votingPool.id}, Title: "${title}"`
+    );
     return res.status(201).json({
       message: "Voting pool created successfully",
       votingPool: responseData,
     });
   } catch (error) {
-    console.error("Error creating voting pool:", error);
+    console.error("[POOL] Error creating voting pool:", error);
     return res.status(500).json({ message: "Error creating voting pool" });
   }
 };

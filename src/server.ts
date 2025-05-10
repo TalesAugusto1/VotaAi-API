@@ -13,6 +13,8 @@ import resultRoutes from "./routes/result.routes";
 
 // Utilities
 import { initCronJobs } from "./utils/cronJobs";
+// Logger middleware
+import { requestLogger, errorLogger } from "./middleware/logger.middleware";
 
 // Load environment variables
 dotenv.config();
@@ -31,6 +33,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// Add request logger middleware
+app.use(requestLogger);
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -39,6 +44,9 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 app.use(limiter);
+
+// Log startup message
+console.log(`[${new Date().toISOString()}] Starting VotaAí API...`);
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -51,6 +59,9 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
+// Add error logger middleware
+app.use(errorLogger);
+
 // Error handling middleware
 app.use(
   (
@@ -59,7 +70,6 @@ app.use(
     res: express.Response,
     next: express.NextFunction
   ) => {
-    console.error(err.stack);
     res.status(err.statusCode || 500).json({
       message: err.message || "Internal Server Error",
       stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
@@ -68,7 +78,10 @@ app.use(
 );
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`[${new Date().toISOString()}] Server running on port ${PORT}`);
+  console.log(
+    `[${new Date().toISOString()}] API logs available in the 'logs' directory`
+  );
 
   // Initialize cron jobs
   initCronJobs();
