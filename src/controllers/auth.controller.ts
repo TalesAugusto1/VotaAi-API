@@ -187,7 +187,7 @@ export const login = async (req: Request, res: Response) => {
     const token = generateToken(user.id);
     console.log(`[AUTH] JWT token generated for user ID: ${user.id}`);
 
-    // Set token in cookie
+    // Set token in cookie (for web clients)
     setCookieToken(res, token);
     console.log(`[AUTH] JWT token set in cookie for user ID: ${user.id}`);
 
@@ -199,16 +199,41 @@ export const login = async (req: Request, res: Response) => {
     console.log(`[AUTH] User has avatar: ${hasAvatar}`);
 
     console.log(`[AUTH] Login successful - User ID: ${user.id}`);
+
+    // Log the success response
+    console.log(
+      `[AUTH] Sending response - Status: 200, Message: "Login successful", User ID: ${user.id}, Token length: ${token.length}`
+    );
+
+    // Return the token both in the response body (for mobile clients)
+    // and in cookie (for web clients)
     return res.status(200).json({
       message: "Login successful",
       user: {
         ...userWithoutSensitiveData,
         hasAvatar,
       },
-      token,
+      token, // Include token in response for mobile clients
     });
-  } catch (error) {
-    console.error("[AUTH] Login error:", error);
+  } catch (error: any) {
+    // Detailed error logging
+    console.error(`[AUTH] Login error details:`);
+    console.error(`[AUTH] Error message: ${error.message}`);
+    console.error(`[AUTH] Error stack: ${error.stack}`);
+
+    if (error.code) {
+      console.error(`[AUTH] Error code: ${error.code}`);
+    }
+
+    if (error.meta) {
+      console.error(`[AUTH] Error metadata: ${JSON.stringify(error.meta)}`);
+    }
+
+    // Log the error response being sent
+    console.error(
+      `[AUTH] Sending error response - Status: 500, Message: "Server error during login"`
+    );
+
     return res.status(500).json({ message: "Server error during login" });
   }
 };
