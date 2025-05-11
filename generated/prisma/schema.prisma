@@ -21,6 +21,7 @@ model User {
   email       String   @unique
   password    String
   avatarImage Bytes?
+  role        Int      @default(1) // 1: normal user, 2: admin user
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -32,7 +33,7 @@ model User {
 model VotingPool {
   id          String   @id @default(uuid())
   title       String
-  description String
+  description String   @db.VarChar(5000) // Specify a larger varchar instead of Text
   category    String
   image       Bytes?
   startDate   DateTime
@@ -56,7 +57,7 @@ model VotingPool {
 model VotingOption {
   id          String  @id @default(uuid())
   text        String
-  description String?
+  description String? @db.VarChar(5000) // Specify a larger varchar instead of Text
   image       Bytes?
 
   // Relations
