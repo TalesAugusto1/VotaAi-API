@@ -1,13 +1,18 @@
 import { Request, Response } from "express";
 import prisma from "../utils/prisma";
 
-// Get all voting pools with optional status filter
+// Get all voting pools with optional status filter and pagination
 export const getAllVotingPools = async (req: Request, res: Response) => {
   const status = req.query.status as string | undefined;
+  // Add pagination parameters
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
+
   console.log(
-    `[POOL] Getting all voting pools${
+    `[POOL] Getting voting pools${
       status ? ` with status: ${status}` : ""
-    } - User: ${req.user?.id || "Public"}`
+    }, page ${page}, limit ${limit} - User: ${req.user?.id || "Public"}`
   );
 
   try {
@@ -18,8 +23,20 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
     const now = new Date();
     console.log(`[POOL] Current server time: ${now.toISOString()}`);
 
-    // First get all pools regardless of status
+    // First, get the total count for pagination
+    const totalCountFilters: any = {};
+    if (status) {
+      totalCountFilters.status = status;
+    }
+
+    // Count total pools that match filters
+    const totalCount = await prisma.votingPool.count({
+      where: totalCountFilters,
+    });
+
+    // Get paginated pools
     let pools = await prisma.votingPool.findMany({
+      where: status ? { status } : undefined,
       include: {
         options: {
           select: {
@@ -39,10 +56,14 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
       orderBy: {
         createdAt: "desc",
       },
+      skip,
+      take: limit,
     });
 
     console.log(
-      `[POOL] Found ${pools.length} total voting pools before filtering`
+      `[POOL] Found ${pools.length} voting pools (page ${page}/${Math.ceil(
+        totalCount / limit
+      )})`
     );
 
     // Recalculate status based on current date
@@ -73,17 +94,6 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
       return pool;
     });
 
-    // Apply status filter if provided
-    if (status) {
-      pools = pools.filter((pool) => pool.status === status);
-    }
-
-    console.log(
-      `[POOL] Found ${pools.length} voting pools after filtering${
-        status ? ` by status: ${status}` : ""
-      }`
-    );
-
     // Convert binary image data to base64 for direct use in the client
     const poolsWithImageData = pools.map((pool) => {
       // For main pool image
@@ -108,16 +118,29 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
 
       return {
         ...pool,
-        image: undefined, // Remove binary data to avoid duplication
+        image: undefined, // Remove binary data
         imageData: imageBase64, // Add base64 data for direct use
         options: optionsWithImages,
       };
     });
 
+    // Create a paginated response
+    const paginatedResponse = {
+      data: poolsWithImageData,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasNextPage: page < Math.ceil(totalCount / limit),
+        hasPreviousPage: page > 1,
+      },
+    };
+
     console.log(
-      `[POOL] Returning ${poolsWithImageData.length} voting pools to client with inline image data`
+      `[POOL] Returning paginated voting pools to client (${poolsWithImageData.length} items)`
     );
-    return res.status(200).json(poolsWithImageData);
+    return res.status(200).json(paginatedResponse);
   } catch (error) {
     console.error("[POOL] Error fetching voting pools:", error);
     return res.status(500).json({ message: "Error fetching voting pools" });
@@ -626,5 +649,97 @@ export const getOptionImage = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching option image:", error);
     return res.status(500).json({ message: "Error fetching image" });
+  }
+};
+
+// Get multiple voting pools by IDs in a single batch request
+export const getBatchVotingPools = async (req: Request, res: Response) => {
+  try {
+    const { ids } = req.query;
+
+    if (!ids || typeof ids !== "string") {
+      return res
+        .status(400)
+        .json({ message: "Missing or invalid 'ids' parameter" });
+    }
+
+    // Parse the comma-separated string of IDs
+    const poolIds = ids.split(",").filter((id) => id.trim().length > 0);
+
+    if (poolIds.length === 0) {
+      return res.status(400).json({ message: "No valid IDs provided" });
+    }
+
+    if (poolIds.length > 50) {
+      return res
+        .status(400)
+        .json({ message: "Too many IDs requested. Maximum is 50." });
+    }
+
+    console.log(
+      `[POOL] Getting batch of voting pools. Count: ${poolIds.length}`
+    );
+
+    // Find all pools that match the given IDs
+    const pools = await prisma.votingPool.findMany({
+      where: {
+        id: {
+          in: poolIds,
+        },
+      },
+      include: {
+        options: {
+          select: {
+            id: true,
+            text: true,
+            description: true,
+            image: true,
+            _count: {
+              select: { votes: true },
+            },
+          },
+        },
+      },
+    });
+
+    console.log(
+      `[POOL] Found ${pools.length} pools from requested ${poolIds.length} IDs`
+    );
+
+    // Convert binary images to base64 for direct use in the client
+    const poolsWithImageData = pools.map((pool) => {
+      const imageBase64 = pool.image
+        ? `data:image/jpeg;base64,${Buffer.from(pool.image).toString("base64")}`
+        : null;
+
+      // For option images
+      const optionsWithImages = pool.options.map((option) => {
+        const optionImageBase64 = option.image
+          ? `data:image/jpeg;base64,${Buffer.from(option.image).toString(
+              "base64"
+            )}`
+          : null;
+
+        return {
+          ...option,
+          image: undefined, // Remove binary data
+          imageData: optionImageBase64, // Add base64 data
+        };
+      });
+
+      return {
+        ...pool,
+        image: undefined, // Remove binary data
+        imageData: imageBase64, // Add base64 data for direct use
+        options: optionsWithImages,
+      };
+    });
+
+    return res.status(200).json(poolsWithImageData);
+  } catch (error) {
+    console.error("[POOL] Error fetching batch voting pools:", error);
+    return res
+      .status(500)
+      .json({ message: "Error fetching batch voting pools" });
   }
 };

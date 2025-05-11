@@ -28,6 +28,8 @@ model User {
   votes     Vote[]
   // Track participation in anonymous voting pools
   votingParticipation VotingParticipation[]
+
+  @@index([role]) // Add index for filtering users by role
 }
 
 model VotingPool {
@@ -52,6 +54,12 @@ model VotingPool {
   latitude    Float?
   longitude   Float?
   address     String?
+
+  // Add indexes for frequently queried fields
+  @@index([status]) // Most important index for filtering by status
+  @@index([startDate, endDate]) // For date-based status calculation
+  @@index([category]) // For filtering by category
+  @@index([createdAt]) // For sorting by creation date
 }
 
 model VotingOption {
@@ -64,6 +72,8 @@ model VotingOption {
   votingPool  VotingPool @relation(fields: [poolId], references: [id], onDelete: Cascade)
   poolId      String
   votes       Vote[]
+
+  @@index([poolId]) // Optimize fetching options for a specific pool
 }
 
 model Vote {
@@ -81,6 +91,12 @@ model Vote {
   optionId   String
   
   @@unique([userId, poolId]) // Ensure one vote per user per poll
+  
+  // Add indexes for statistics and searching
+  @@index([poolId]) // For counting votes per pool
+  @@index([optionId]) // For counting votes per option
+  @@index([userId]) // For finding a user's votes
+  @@index([timestamp]) // For ordering by time
 }
 
 // New model to track user participation in anonymous polls
@@ -96,4 +112,9 @@ model VotingParticipation {
   poolId     String
   
   @@unique([userId, poolId]) // Ensure one participation record per user per poll
+  
+  // Add indexes for performance
+  @@index([userId]) // For finding all pools a user participated in
+  @@index([poolId]) // For finding all users who participated in a pool
+  @@index([timestamp]) // For sorting by timestamp
 }
