@@ -76,13 +76,15 @@ export const getUserVotedPoolsResults = async (req: Request, res: Response) => {
   const status = req.query.status as string | undefined;
 
   try {
-    // First, get all the pools where the user has directly voted (non-anonymous)
+    // SIMPLIFIED VERSION THAT JUST RETURNS POOL IDs
+    // The client can then fetch each pool individually using the getVotingPoolById function
+
+    // Get all pool IDs where the user has directly voted (non-anonymous)
     const votedPools = await prisma.vote.findMany({
       where: {
         userId,
         votingPool: {
-          status: status || undefined,
-          anonymous: false, // Only get direct votes (non-anonymous pools)
+          status: status as "active" | "closed" | undefined,
         },
       },
       select: {
@@ -91,13 +93,12 @@ export const getUserVotedPoolsResults = async (req: Request, res: Response) => {
       distinct: ["poolId"],
     });
 
-    // Also get all the pools where the user has participated anonymously
+    // Also get all pool IDs where the user has participated anonymously
     const anonymousParticipations = await prisma.votingParticipation.findMany({
       where: {
         userId,
         votingPool: {
-          status: status || undefined,
-          anonymous: true, // Only get participation in anonymous pools
+          status: status as "active" | "closed" | undefined,
         },
       },
       select: {
@@ -111,88 +112,17 @@ export const getUserVotedPoolsResults = async (req: Request, res: Response) => {
       ...anonymousParticipations.map((p) => p.poolId),
     ];
 
-    // If no pools, return empty array
-    if (poolIds.length === 0) {
-      return res.status(200).json([]);
-    }
+    // Return simple array of objects with just the pool IDs
+    const result = poolIds.map((poolId) => ({ poolId }));
 
-    // Get results for all these pools
-    const results = await Promise.all(
-      poolIds.map(async (poolId) => {
-        const pool = await prisma.votingPool.findUnique({
-          where: { id: poolId },
-          select: {
-            id: true,
-            title: true,
-            status: true,
-            anonymous: true,
-            options: {
-              select: {
-                id: true,
-                text: true,
-                _count: {
-                  select: { votes: true },
-                },
-              },
-            },
-            _count: {
-              select: { votes: true },
-            },
-          },
-        });
-
-        if (!pool) return null;
-
-        const totalVotes = pool._count.votes;
-        const optionResults = pool.options.map((option) => {
-          const voteCount = option._count.votes;
-          const percentage =
-            totalVotes > 0 ? (voteCount / totalVotes) * 100 : 0;
-
-          return {
-            id: option.id,
-            text: option.text,
-            voteCount,
-            percentage: Math.round(percentage * 100) / 100,
-          };
-        });
-
-        // For anonymous pools, if this user participated, don't return their specific vote
-        let userVote = null;
-        if (!pool.anonymous) {
-          // Only for non-anonymous pools, try to fetch the user's vote
-          const vote = await prisma.vote.findFirst({
-            where: {
-              userId,
-              poolId,
-            },
-            select: {
-              optionId: true,
-            },
-          });
-          userVote = vote?.optionId || null;
-        }
-
-        return {
-          poolId: pool.id,
-          title: pool.title,
-          status: pool.status,
-          totalVotes,
-          isAnonymous: pool.anonymous,
-          userVote, // Will be null for anonymous pools
-          results: optionResults,
-        };
-      })
-    );
-
-    // Remove any nulls (in case a pool was deleted)
-    const validResults = results.filter((result) => result !== null);
-
-    return res.status(200).json(validResults);
+    // Always return JSON, even if empty
+    return res.status(200).json(result);
   } catch (error) {
     console.error("Error fetching user voted pools results:", error);
-    return res
-      .status(500)
-      .json({ message: "Error fetching user voted pools results" });
+    // Ensure we always return valid JSON
+    return res.status(500).json({
+      message: "Error fetching user voted pools results",
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 };
