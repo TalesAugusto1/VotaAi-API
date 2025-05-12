@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import fs from "fs";
 import path from "path";
 
+// Maximum log file size (10MB)
+const MAX_LOG_SIZE = 10 * 1024 * 1024;
+
 // Ensure logs directory exists
 const logsDir = path.join(process.cwd(), "logs");
 if (!fs.existsSync(logsDir)) {
@@ -30,6 +33,34 @@ const safeStringify = (obj: any): string => {
   }
 };
 
+// Safe file append function that won't crash the server if disk is full
+const safeAppendFile = (filePath: string, data: string): void => {
+  try {
+    // Check if log file exists and is too large
+    if (fs.existsSync(filePath)) {
+      const stats = fs.statSync(filePath);
+
+      // If file is larger than max size, rotate it (rename old log and start new one)
+      if (stats.size > MAX_LOG_SIZE) {
+        const backupPath = `${filePath}.${Date.now()}.bak`;
+        try {
+          fs.renameSync(filePath, backupPath);
+          console.log(`Rotated log file ${filePath} to ${backupPath}`);
+        } catch (error: any) {
+          console.error(`Failed to rotate log file: ${error.message}`);
+          // Continue with append even if rotation fails
+        }
+      }
+    }
+
+    // Append to file
+    fs.appendFileSync(filePath, data);
+  } catch (error: any) {
+    // Don't let logging errors crash the server
+    console.error(`Failed to write to log file ${filePath}: ${error.message}`);
+  }
+};
+
 // Request logger middleware
 export const requestLogger = (
   req: Request,
@@ -48,34 +79,19 @@ export const requestLogger = (
     const responseTime = endTime.getTime() - startTime.getTime();
     const statusCode = res.statusCode;
 
-    // Format log entry
-    const logEntry = {
-      timestamp: formatDate(endTime),
-      method,
-      url: originalUrl,
-      status: statusCode,
-      responseTime: `${responseTime}ms`,
-      ip,
-      userAgent: req.headers["user-agent"] || "Unknown",
-      userId: req.user?.id || "Unauthenticated",
-      requestBody: method !== "GET" ? safeStringify(req.body) : undefined,
-      responseBody: statusCode !== 204 ? safeStringify(body) : undefined,
-    };
-
     // Format log message
-    const logMessage = `[${logEntry.timestamp}] ${method} ${originalUrl} ${statusCode} ${responseTime}ms - ${ip} - ${logEntry.userId}`;
+    const logMessage = `[${formatDate(
+      endTime
+    )}] ${method} ${originalUrl} ${statusCode} ${responseTime}ms - ${ip} - ${
+      req.user?.id || "Unauthenticated"
+    }`;
 
-    // Log to console
+    // Log to console only
     if (statusCode >= 400) {
       console.error(logMessage);
-      // Log detailed error information to error log file
-      fs.appendFileSync(errorLogPath, JSON.stringify(logEntry) + "\n");
     } else {
       console.log(logMessage);
     }
-
-    // Log to access log file
-    fs.appendFileSync(accessLogPath, JSON.stringify(logEntry) + "\n");
 
     // Call the original send function
     return originalSend.call(this, body);
@@ -101,27 +117,10 @@ export const errorLogger = (
   const { method, originalUrl, ip } = req;
   const timestamp = formatDate(new Date());
 
-  // Format error log entry
-  const errorLogEntry = {
-    timestamp,
-    method,
-    url: originalUrl,
-    ip,
-    userAgent: req.headers["user-agent"] || "Unknown",
-    userId: req.user?.id || "Unauthenticated",
-    error: {
-      message: err.message,
-      stack: err.stack,
-      statusCode: err.statusCode || 500,
-      name: err.name,
-    },
-  };
-
-  // Log to console and error log file
+  // Log to console only
   console.error(
     `[${timestamp}] ERROR: ${method} ${originalUrl} - ${err.message}`
   );
-  fs.appendFileSync(errorLogPath, JSON.stringify(errorLogEntry) + "\n");
 
   next(err);
 };

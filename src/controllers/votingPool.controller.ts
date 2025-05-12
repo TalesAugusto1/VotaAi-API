@@ -143,6 +143,18 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
     return res.status(200).json(paginatedResponse);
   } catch (error) {
     console.error("[POOL] Error fetching voting pools:", error);
+    // Add detailed error logging
+    if (error instanceof Error) {
+      console.error("[POOL] Error message:", error.message);
+      console.error("[POOL] Error stack:", error.stack);
+    }
+    // Check for database connection errors
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      console.log("[POOL] Database connection is working");
+    } catch (dbError) {
+      console.error("[POOL] Database connection error:", dbError);
+    }
     return res.status(500).json({ message: "Error fetching voting pools" });
   }
 };
