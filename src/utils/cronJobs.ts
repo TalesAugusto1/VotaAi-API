@@ -99,7 +99,7 @@ export const initCronJobs = () => {
   // Use node-cron to schedule jobs with proper cron syntax
   // This runs every hour at minute 0
   cron.schedule("0 * * * *", updateVotingPoolStatuses, {
-    timezone: "UTC",
+    timezone: "America/Sao_Paulo",
   });
 
   console.log("[CRON] Status update job scheduled to run hourly");

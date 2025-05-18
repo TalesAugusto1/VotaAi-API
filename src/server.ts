@@ -21,6 +21,11 @@ import { requestLogger, errorLogger } from "./middleware/logger.middleware";
 // Load environment variables
 dotenv.config();
 
+if (!process.env.BLOCKCHAIN_API_URL) {
+  console.error("[BOOT] BLOCKCHAIN_API_URL is not defined in .env. API will not start.");
+  process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 

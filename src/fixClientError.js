@@ -85,7 +85,7 @@ export async function createVotingPool(poolData, mainImage, optionImages = []) {
 
   // Send the request
   try {
-    const API_BASE_URL = "http://192.168.15.15:3000";
+    const API_BASE_URL = "http://192.168.1.110:3000";
     const response = await fetch(`${API_BASE_URL}/api/voting-pools`, {
       method: "POST",
       headers: {

@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
 import prisma from "../utils/prisma";
+import { FetchService } from "../services/fetchService";
+import { VotingOption, VotingPool } from "../../generated/prisma";
+import { delay } from "../utils/delay";
 
 // Get all voting pools with optional status filter and pagination
 export const getAllVotingPools = async (req: Request, res: Response) => {
@@ -44,13 +47,7 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
             text: true,
             description: true,
             image: true,
-            _count: {
-              select: { votes: true },
-            },
           },
-        },
-        _count: {
-          select: { votes: true },
         },
       },
       orderBy: {
@@ -65,6 +62,8 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
         totalCount / limit
       )})`
     );
+
+    await fetchAndAddVotesMany(pools, true);
 
     // Recalculate status based on current date
     pools = pools.map((pool) => {
@@ -162,7 +161,10 @@ export const getAllVotingPools = async (req: Request, res: Response) => {
 // Get a specific voting pool by ID
 export const getVotingPoolById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const params = req.params;
+    const query = req.query;
+    const id = parseInt(params.id, 10);
+    const includeVotes = query.includeVotes === "true";
     console.log(`[POOL] Getting voting pool by ID: ${id}`);
 
     const pool = await prisma.votingPool.findUnique({
@@ -174,9 +176,6 @@ export const getVotingPoolById = async (req: Request, res: Response) => {
             text: true,
             description: true,
             image: true,
-            _count: {
-              select: { votes: true },
-            },
           },
         },
       },
@@ -186,6 +185,8 @@ export const getVotingPoolById = async (req: Request, res: Response) => {
       console.log(`[POOL] Voting pool not found: ${id}`);
       return res.status(404).json({ message: "Voting pool not found" });
     }
+
+    if(includeVotes) await fetchAndAddVotes(pool);
 
     // Convert binary images to base64 for direct use in the client
     const imageBase64 = pool.image
@@ -230,6 +231,91 @@ export const getVotingPoolById = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching voting pool:", error);
     return res.status(500).json({ message: "Error fetching voting pool" });
+  }
+};
+
+export const getVotingPoolByIds = async (req: Request, res: Response) => {
+  try {
+    const query = req.query;
+    const idsParam = query.ids;
+console.log(`[POOL] Getting voting pools by IDs: ${idsParam}`);
+    if (!idsParam || typeof idsParam !== "string") {
+      return res.status(400).json({ message: "Missing or invalid 'ids' parameter" });
+    }
+
+    // Parse the comma-separated string of IDs
+    const poolIds = idsParam
+      .split(",")
+      .filter((id) => id.trim().length > 0)
+      .map((id) => parseInt(id.trim(), 10))
+      .filter((id) => !isNaN(id));
+    console.log({poolIds})
+
+    if (poolIds.length === 0) {
+      return res.status(400).json({ message: "No valid IDs provided" });
+    }
+
+    const includeVotes = query.includeVotes === "true";
+    console.log(`[POOL] Getting voting pools by IDs: ${poolIds.join(", ")}`);
+
+    // Find all pools that match the given IDs
+    const pools = await prisma.votingPool.findMany({
+      where: {
+        id: {
+          in: poolIds,
+        },
+      },
+      include: {
+        options: {
+          select: {
+            id: true,
+            text: true,
+            description: true,
+            image: true,
+          },
+        },
+      },
+    });
+
+    if (includeVotes) {
+      await fetchAndAddVotesMany(pools, true);
+    }
+
+    // Convert binary images to base64 for direct use in the client
+    const poolsWithImageData = pools.map((pool) => {
+      const imageBase64 = pool.image
+        ? `data:image/jpeg;base64,${Buffer.from(pool.image).toString("base64")}`
+        : null;
+
+      // For option images
+      const optionsWithImages = pool.options.map((option) => {
+        const optionImageBase64 = option.image
+          ? `data:image/jpeg;base64,${Buffer.from(option.image).toString("base64")}`
+          : null;
+
+        return {
+          ...option,
+          image: undefined, // Remove binary data
+          imageData: optionImageBase64, // Add base64 data
+        };
+      });
+
+      return {
+        ...pool,
+        image: undefined, // Remove binary data
+        imageData: imageBase64, // Add base64 data for direct use
+        options: optionsWithImages,
+      };
+    });
+
+    console.log(
+      `[POOL] Successfully retrieved ${poolsWithImageData.length} voting pools with inline image data`
+    );
+
+    return res.status(200).json(poolsWithImageData);
+  } catch (error) {
+    console.error("Error fetching voting pools by IDs:", error);
+    return res.status(500).json({ message: "Error fetching voting pools by IDs" });
   }
 };
 
@@ -410,7 +496,7 @@ export const createVotingPool = async (req: Request, res: Response) => {
           },
         },
       });
-    });
+    }, {timeout: 15000, maxWait: 15000});
 
     if (!votingPool) {
       console.error(`[POOL] Error: Transaction completed but returned no data`);
@@ -462,7 +548,8 @@ export const createVotingPool = async (req: Request, res: Response) => {
 // Update a voting pool
 export const updateVotingPool = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const params = req.params;
+    const id = parseInt(params.id, 10);
     const {
       title,
       description,
@@ -559,7 +646,7 @@ export const updateVotingPool = async (req: Request, res: Response) => {
           },
         },
       });
-    });
+    }, {timeout: 15000, maxWait: 15000});
 
     if (!updatedPool) {
       return res.status(500).json({ message: "Error updating voting pool" });
@@ -589,7 +676,8 @@ export const updateVotingPool = async (req: Request, res: Response) => {
 // Delete a voting pool
 export const deleteVotingPool = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const params = req.params;
+    const id = parseInt(params.id, 10);
 
     // Check if voting pool exists
     const existingPool = await prisma.votingPool.findUnique({
@@ -617,7 +705,8 @@ export const deleteVotingPool = async (req: Request, res: Response) => {
 // Get pool image by ID
 export const getPoolImage = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const params = req.params;
+    const id = parseInt(params.id, 10);
 
     const pool = await prisma.votingPool.findUnique({
       where: { id },
@@ -642,7 +731,8 @@ export const getPoolImage = async (req: Request, res: Response) => {
 // Get option image by ID
 export const getOptionImage = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const params = req.params;
+    const id = parseInt(params.id, 10);
 
     const option = await prisma.votingOption.findUnique({
       where: { id },
@@ -676,7 +766,7 @@ export const getBatchVotingPools = async (req: Request, res: Response) => {
     }
 
     // Parse the comma-separated string of IDs
-    const poolIds = ids.split(",").filter((id) => id.trim().length > 0);
+    const poolIds = ids.split(",").filter((id) => id.trim().length > 0).map((id) => parseInt(id.trim(), 10));
 
     if (poolIds.length === 0) {
       return res.status(400).json({ message: "No valid IDs provided" });
@@ -706,9 +796,6 @@ export const getBatchVotingPools = async (req: Request, res: Response) => {
             text: true,
             description: true,
             image: true,
-            _count: {
-              select: { votes: true },
-            },
           },
         },
       },
@@ -717,6 +804,8 @@ export const getBatchVotingPools = async (req: Request, res: Response) => {
     console.log(
       `[POOL] Found ${pools.length} pools from requested ${poolIds.length} IDs`
     );
+
+    await fetchAndAddVotesMany(pools, true);
 
     // Convert binary images to base64 for direct use in the client
     const poolsWithImageData = pools.map((pool) => {
@@ -753,5 +842,70 @@ export const getBatchVotingPools = async (req: Request, res: Response) => {
     return res
       .status(500)
       .json({ message: "Error fetching batch voting pools" });
+  }
+};
+
+const fetchAndAddVotes = async (pool: VotingPool & {"_count"?: {votes: number}} & {options: Array<Omit<VotingOption, 'poolId'>>}, totalVotes: boolean = false) => {
+  const fetchService = new FetchService();
+  if(!pool) return;
+  const response = await fetchService.get< {
+    pollId: number;
+    totais: Record<string, number>;
+    totalVotos: number;
+    txCount: number;
+  }>(`/results/${pool.id}`)
+
+  pool.options = pool.options.map((option) => ({
+    ...option,
+    "_count": {
+      votes: response.totais[option.id] || 0,
+    }
+  }));
+
+  if(totalVotes) {
+    pool["_count"] = {votes: response.totalVotos || 0};
+  }
+}
+
+const fetchAndAddVotesMany = async (
+  pools: (VotingPool & {"_count"?: {votes: number}} & { options: Array<Omit<VotingOption, "poolId">> })[],
+  totalVotes: boolean = false
+) => {
+  const fetchService = new FetchService();
+  if (!pools || pools.length === 0) return;
+
+  const poolIds = pools.map((pool) => pool.id);
+  const queryString = poolIds.map((id) => `poll_ids=${id}`).join("&");
+
+  const responses = await fetchService.get<
+    Array<{
+      pollId: number;
+      totais: Record<string, number>;
+      totalVotos: number;
+      txCount: number;
+    }>
+  >(`/results_many?${queryString}`);
+
+  // Map responses by pollId for quick lookup
+  const responseMap = new Map<number, typeof responses[0]>();
+  for (const resp of responses) {
+    responseMap.set(resp.pollId, resp);
+  }
+
+  // Mutate each pool with the fetched votes
+  for (const pool of pools) {
+    const response = responseMap.get(pool.id);
+    if (!response) continue;
+
+    pool.options = pool.options.map((option) => ({
+      ...option,
+      _count: {
+        votes: response.totais[option.id] || 0,
+      },
+    }));
+
+    if (totalVotes) {
+      pool._count = { votes: response.totalVotos || 0 };
+    }
   }
 };

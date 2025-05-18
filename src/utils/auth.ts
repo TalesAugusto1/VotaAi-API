@@ -14,12 +14,12 @@ export const comparePassword = async (
   return await bcrypt.compare(password, hashedPassword);
 };
 
-export const generateToken = (userId: string): string => {
+export const generateToken = (userId: number): string => {
   if (!process.env.JWT_SECRET) {
     throw new Error("JWT_SECRET is not defined in environment variables");
   }
 
-  const expiresIn = process.env.JWT_EXPIRES_IN || "7d";
+  const expiresIn: any = process.env.JWT_EXPIRES_IN || "7d";
   console.log(
     `[AUTH] Generating token for user ${userId} with expiration: ${expiresIn}`
   );

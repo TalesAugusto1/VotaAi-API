@@ -15,7 +15,7 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(uuid())
+  id          Int      @id @default(autoincrement())
   name        String
   cpf         String   @unique
   email       String   @unique
@@ -25,13 +25,14 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  votes               Vote[]
   // Track participation in anonymous voting pools
   votingParticipation VotingParticipation[]
+
+  @@index([role]) // Add index for filtering users by role
 }
 
 model VotingPool {
-  id          String   @id @default(uuid())
+  id          Int      @id @default(autoincrement())
   title       String
   description String   @db.VarChar(5000) // Specify a larger varchar instead of Text
   category    String
@@ -44,7 +45,6 @@ model VotingPool {
   updatedAt   DateTime @updatedAt
 
   options       VotingOption[]
-  votes         Vote[]
   // Track user participation in anonymous pools
   participation VotingParticipation[]
 
@@ -52,48 +52,42 @@ model VotingPool {
   latitude  Float?
   longitude Float?
   address   String?
+
+  // Add indexes for frequently queried fields
+  @@index([status]) // Most important index for filtering by status
+  @@index([startDate, endDate]) // For date-based status calculation
+  @@index([category]) // For filtering by category
+  @@index([createdAt]) // For sorting by creation date
 }
 
 model VotingOption {
-  id          String  @id @default(uuid())
+  id          Int     @id @default(autoincrement())
   text        String
   description String? @db.VarChar(5000) // Specify a larger varchar instead of Text
   image       Bytes?
 
   // Relations
   votingPool VotingPool @relation(fields: [poolId], references: [id], onDelete: Cascade)
-  poolId     String
-  votes      Vote[]
-}
+  poolId     Int
 
-model Vote {
-  id        String   @id @default(uuid())
-  timestamp DateTime @default(now())
-
-  // Relations - these will be null for anonymous votes
-  user   User?   @relation(fields: [userId], references: [id])
-  userId String?
-
-  // Always required
-  votingPool VotingPool   @relation(fields: [poolId], references: [id])
-  poolId     String
-  option     VotingOption @relation(fields: [optionId], references: [id])
-  optionId   String
-
-  @@unique([userId, poolId]) // Ensure one vote per user per poll
+  @@index([poolId]) // Optimize fetching options for a specific pool
 }
 
 // New model to track user participation in anonymous polls
 model VotingParticipation {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   timestamp DateTime @default(now())
 
   // Relations
-  user   User   @relation(fields: [userId], references: [id])
-  userId String
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
 
   votingPool VotingPool @relation(fields: [poolId], references: [id])
-  poolId     String
+  poolId     Int
 
   @@unique([userId, poolId]) // Ensure one participation record per user per poll
+  // Add indexes for performance
+  @@index([userId]) // For finding all pools a user participated in
+  @@index([poolId]) // For finding all users who participated in a pool
+  @@index([timestamp]) // For sorting by timestamp
 }

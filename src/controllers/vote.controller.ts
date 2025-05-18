@@ -1,8 +1,13 @@
 import { Request, Response } from "express";
 import prisma from "../utils/prisma";
+import { FetchService } from "../services/fetchService";
+import { ServerResponse } from "http";
+import { VotingParticipation } from "../../generated/prisma";
+import { parse } from "path";
 
 // Submit a vote
 export const submitVote = async (req: Request, res: Response) => {
+  const fetchService = new FetchService();
   const { poolId, optionId } = req.body;
   const userId = req.user?.id;
   console.log(
@@ -62,26 +67,6 @@ export const submitVote = async (req: Request, res: Response) => {
         `[VOTE] Checking if user has already voted - User ID: ${userId}`
       );
 
-      // For regular votes, check the Vote table
-      if (!votingPool.anonymous) {
-        const existingVote = await prisma.vote.findFirst({
-          where: {
-            poolId,
-            userId,
-          },
-        });
-
-        if (existingVote) {
-          console.log(
-            `[VOTE] Error: User has already voted - User ID: ${userId}, Previous vote: ${existingVote.id}`
-          );
-          return res
-            .status(400)
-            .json({ message: "You have already voted in this pool" });
-        }
-      }
-      // For anonymous votes, check the participation table
-      else {
         const existingParticipation =
           await prisma.votingParticipation.findFirst({
             where: {
@@ -98,7 +83,7 @@ export const submitVote = async (req: Request, res: Response) => {
             .status(400)
             .json({ message: "You have already voted in this pool" });
         }
-      }
+      
       console.log(`[VOTE] User has not voted yet in this pool`);
     } else {
       console.log(
@@ -114,50 +99,28 @@ export const submitVote = async (req: Request, res: Response) => {
       let voteRecord;
 
       // For anonymous voting
-      if (votingPool.anonymous) {
-        console.log(`[VOTE] Anonymous voting - creating anonymous vote record`);
+      console.log(`[VOTE] Anonymous voting - creating anonymous vote record`);
 
-        // Create anonymous vote (no userId)
-        voteRecord = await tx.vote.create({
-          data: {
-            poolId,
-            optionId,
-            userId: null, // Anonymous vote
-          },
-        });
+      // Create vote
 
-        // Track participation without revealing the choice
-        await tx.votingParticipation.create({
-          data: {
-            poolId,
-            userId, // Keep track that this user participated
-          },
-        });
-        console.log(`[VOTE] Created anonymous vote and participation record`);
-      }
-      // For regular voting
-      else {
-        console.log(
-          `[VOTE] Regular voting - creating vote record with user ID`
-        );
+      const result = await fetchService.post<{tx_hash: string}>('/vote', {pollId:poolId, option: String(optionId)})
 
-        // Create regular vote with userId
-        voteRecord = await tx.vote.create({
-          data: {
-            poolId,
-            optionId,
-            userId, // Regular vote linked to user
-          },
-        });
-        console.log(`[VOTE] Created regular vote record with user ID`);
-      }
+      voteRecord = result.tx_hash
+
+      // Track participation without revealing the choice
+      await tx.votingParticipation.create({
+        data: {
+          poolId,
+          userId,
+        },
+      });
+      console.log(`[VOTE] Created anonymous vote and participation record`);
 
       return voteRecord;
-    });
+    }, {timeout: 15000, maxWait: 15000});
 
     console.log(
-      `[VOTE] Vote created successfully - Vote ID: ${voteResult.id}, User: ${
-        voteResult.userId || "Anonymous"
+      `[VOTE] Vote created successfully - Vote hash: ${voteResult} "Anonymous"
       }`
     );
 
@@ -171,81 +134,10 @@ export const submitVote = async (req: Request, res: Response) => {
   }
 };
 
-// Get all votes for the current user
-export const getUserVotes = async (req: Request, res: Response) => {
-  const userId = req.user.id;
-  console.log(`[VOTE] Getting all votes for user - User ID: ${userId}`);
-
-  try {
-    // Get non-anonymous votes directly
-    const votes = await prisma.vote.findMany({
-      where: {
-        userId,
-      },
-      include: {
-        votingPool: {
-          select: {
-            id: true,
-            title: true,
-            status: true,
-            anonymous: true,
-          },
-        },
-        option: {
-          select: {
-            id: true,
-            text: true,
-          },
-        },
-      },
-    });
-
-    // Get anonymous voting pools the user has participated in
-    const anonymousParticipation = await prisma.votingParticipation.findMany({
-      where: {
-        userId,
-      },
-      include: {
-        votingPool: {
-          select: {
-            id: true,
-            title: true,
-            status: true,
-            anonymous: true,
-          },
-        },
-      },
-    });
-
-    // Transform the anonymous participations into vote-like objects
-    // but without revealing the specific option chosen
-    const anonymousVotes = anonymousParticipation.map((participation) => ({
-      id: participation.id,
-      timestamp: participation.timestamp,
-      userId: participation.userId,
-      poolId: participation.poolId,
-      votingPool: participation.votingPool,
-      isAnonymous: true,
-      // Note: We don't include optionId or option details to maintain anonymity
-    }));
-
-    console.log(
-      `[VOTE] Found ${votes.length} direct votes and ${anonymousVotes.length} anonymous participations for user ID: ${userId}`
-    );
-
-    return res.status(200).json({
-      regularVotes: votes,
-      anonymousParticipation: anonymousVotes,
-    });
-  } catch (error) {
-    console.error("[VOTE] Error fetching user votes:", error);
-    return res.status(500).json({ message: "Error fetching user votes" });
-  }
-};
-
 // Check if user has voted in a specific pool
 export const checkUserVote = async (req: Request, res: Response) => {
-  const { poolId } = req.params;
+  const params = req.params;
+  const poolId = parseInt(params.poolId, 10);
   const userId = req.user.id;
   console.log(
     `[VOTE] Checking if user has voted in pool - User ID: ${userId}, Pool ID: ${poolId}`
@@ -266,50 +158,24 @@ export const checkUserVote = async (req: Request, res: Response) => {
     let hasVoted = false;
     let optionId = null;
 
-    // For non-anonymous pools, check for vote and return the option chosen
-    if (!pool.anonymous) {
-      const vote = await prisma.vote.findFirst({
-        where: {
-          poolId,
-          userId,
-        },
-        select: {
-          id: true,
-          optionId: true,
-        },
-      });
+    const participation = await prisma.votingParticipation.findFirst({
+      where: {
+        poolId,
+        userId,
+      },
+      select: {
+        id: true,
+      },
+    });
 
-      hasVoted = !!vote;
-      optionId = vote?.optionId || null;
+    hasVoted = !!participation;
 
-      console.log(
-        `[VOTE] Regular pool: User ${
-          hasVoted ? "has" : "has not"
-        } voted in pool - User ID: ${userId}, Pool ID: ${poolId}${
-          hasVoted ? `, Option: ${optionId}` : ""
-        }`
-      );
-    }
-    // For anonymous pools, only check participation, not the option
-    else {
-      const participation = await prisma.votingParticipation.findFirst({
-        where: {
-          poolId,
-          userId,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      hasVoted = !!participation;
-
-      console.log(
-        `[VOTE] Anonymous pool: User ${
-          hasVoted ? "has" : "has not"
-        } participated in pool - User ID: ${userId}, Pool ID: ${poolId}`
-      );
-    }
+    console.log(
+      `[VOTE] Anonymous pool: User ${
+        hasVoted ? "has" : "has not"
+      } participated in pool - User ID: ${userId}, Pool ID: ${poolId}`
+    );
+    
 
     return res.status(200).json({
       hasVoted,
@@ -319,5 +185,35 @@ export const checkUserVote = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("[VOTE] Error checking user vote:", error);
     return res.status(500).json({ message: "Error checking user vote" });
+  }
+};
+
+export const getUserVotes = async (req: Request, res: Response) => {
+  try {
+    const query = req.query;
+    const userId = parseInt(query.userId as string, 10);
+
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: "Invalid userId" });
+    }
+
+    const data = await prisma.votingParticipation.findMany({
+      where: { userId },
+      orderBy: { timestamp: "desc" },
+      select: {
+        id: true,
+        poolId: true,
+        userId: true,
+        timestamp: true,
+      },
+    });
+
+    console.log({data})
+
+    return res.status(200).json({ anonymousParticipation: data });
+  } catch (error) {
+    console.error("[VOTE] Error fetching user votes:", error);
+    console.error(error)
+    return res.status(500).json({ message: "Error fetching user votes" });
   }
 };

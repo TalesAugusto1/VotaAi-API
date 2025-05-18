@@ -73,6 +73,6 @@ export const updateVotingPoolSchema = z
 
 // Vote validation schema
 export const voteSchema = z.object({
-  poolId: z.string().uuid(),
-  optionId: z.string().uuid(),
+  poolId: z.number(),
+  optionId: z.number(),
 });

@@ -264,7 +264,6 @@ async function main() {
     // Clear existing data
     console.log("Clearing existing data...");
     await prisma.votingParticipation.deleteMany({});
-    await prisma.vote.deleteMany({});
     await prisma.votingOption.deleteMany({});
     await prisma.votingPool.deleteMany({});
     await prisma.user.deleteMany({});
@@ -325,7 +324,7 @@ async function main() {
         image: await loadImageAsBuffer(categoryImagePaths.urban),
         startDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
         endDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days from now
-        anonymous: false,
+        anonymous: true,
         status: "active",
         latitude: -23.5505,
         longitude: -46.6333,
@@ -408,7 +407,7 @@ async function main() {
         image: await loadImageAsBuffer(categoryImagePaths.culture),
         startDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
         endDate: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000), // 35 days from now
-        anonymous: false,
+        anonymous: true,
         status: "upcoming",
         options: {
           create: [
@@ -447,49 +446,6 @@ async function main() {
       },
     });
 
-    // 4. Education Proposal - Closed
-    const educationPool = await prisma.votingPool.create({
-      data: {
-        title: "Atividades Extra-Curriculares nas Escolas Municipais",
-        description:
-          "Votação para determinar quais atividades extra-curriculares devem ser priorizadas e implementadas nas escolas municipais no próximo ano letivo.",
-        category: "Educação",
-        image: await loadImageAsBuffer(categoryImagePaths.education),
-        startDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), // 60 days ago
-        endDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-        anonymous: false,
-        status: "closed",
-        options: {
-          create: [
-            {
-              text: "Programação e Robótica",
-              description:
-                "Introdução à programação de computadores e robótica básica para desenvolver habilidades tecnológicas.",
-              image: await loadImageAsBuffer(optionImagePaths.programming),
-            },
-            {
-              text: "Artes e Expressão Cultural",
-              description:
-                "Atividades artísticas como música, teatro, dança e artes visuais para estimular a criatividade.",
-              image: await loadImageAsBuffer(optionImagePaths.arts),
-            },
-            {
-              text: "Esportes e Saúde",
-              description:
-                "Expansão das atividades esportivas e introdução de educação nutricional e hábitos saudáveis.",
-              image: await loadImageAsBuffer(optionImagePaths.sports),
-            },
-            {
-              text: "Meio Ambiente e Sustentabilidade",
-              description:
-                "Projetos ambientais práticos como hortas escolares e reciclagem, além de educação ambiental.",
-              image: await loadImageAsBuffer(optionImagePaths.environment),
-            },
-          ],
-        },
-      },
-    });
-
     // 5. Local Governance - Active (Location-based)
     const governancePool = await prisma.votingPool.create({
       data: {
@@ -500,7 +456,7 @@ async function main() {
         image: await loadImageAsBuffer(categoryImagePaths.governance),
         startDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
         endDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000), // 25 days from now
-        anonymous: false,
+        anonymous: true,
         status: "active",
         latitude: -23.5557,
         longitude: -46.6395,
@@ -577,197 +533,6 @@ async function main() {
           ],
         },
       },
-    });
-
-    console.log("Creating some votes for the active and closed pools...");
-
-    // Add votes to the education pool (closed)
-    const educationOptions = await prisma.votingOption.findMany({
-      where: { poolId: educationPool.id },
-    });
-
-    // Distribute votes among options - making one the winner
-    await prisma.vote.createMany({
-      data: [
-        // Admin votes for Artes
-        {
-          userId: adminUser.id,
-          poolId: educationPool.id,
-          optionId: educationOptions[1].id,
-        },
-
-        // Regular user votes for Programação
-        {
-          userId: regularUser.id,
-          poolId: educationPool.id,
-          optionId: educationOptions[0].id,
-        },
-
-        // Additional votes to create a clear winner (Option 1 - Artes)
-        ...Array(15)
-          .fill(null)
-          .map(() => ({
-            poolId: educationPool.id,
-            optionId: educationOptions[1].id,
-            userId: null, // Anonymous votes
-          })),
-
-        // Some votes for other options
-        ...Array(8)
-          .fill(null)
-          .map(() => ({
-            poolId: educationPool.id,
-            optionId: educationOptions[0].id,
-            userId: null, // Anonymous votes
-          })),
-        ...Array(12)
-          .fill(null)
-          .map(() => ({
-            poolId: educationPool.id,
-            optionId: educationOptions[2].id,
-            userId: null, // Anonymous votes
-          })),
-        ...Array(5)
-          .fill(null)
-          .map(() => ({
-            poolId: educationPool.id,
-            optionId: educationOptions[3].id,
-            userId: null, // Anonymous votes
-          })),
-      ],
-    });
-
-    // Add votes to the urban infrastructure pool (active)
-    const urbanOptions = await prisma.votingOption.findMany({
-      where: { poolId: urbanInfrastructurePool.id },
-    });
-
-    // Add some votes to the active urban pool
-    await prisma.vote.createMany({
-      data: [
-        // Admin votes for the Sustainable project
-        {
-          userId: adminUser.id,
-          poolId: urbanInfrastructurePool.id,
-          optionId: urbanOptions[1].id,
-        },
-
-        // Regular user votes for Modern project
-        {
-          userId: regularUser.id,
-          poolId: urbanInfrastructurePool.id,
-          optionId: urbanOptions[0].id,
-        },
-
-        // Add some more votes distributed across options
-        ...Array(7)
-          .fill(null)
-          .map(() => ({
-            poolId: urbanInfrastructurePool.id,
-            optionId: urbanOptions[0].id,
-            userId: null, // Anonymous votes
-          })),
-        ...Array(10)
-          .fill(null)
-          .map(() => ({
-            poolId: urbanInfrastructurePool.id,
-            optionId: urbanOptions[1].id,
-            userId: null, // Anonymous votes
-          })),
-        ...Array(6)
-          .fill(null)
-          .map(() => ({
-            poolId: urbanInfrastructurePool.id,
-            optionId: urbanOptions[2].id,
-            userId: null, // Anonymous votes
-          })),
-        ...Array(5)
-          .fill(null)
-          .map(() => ({
-            poolId: urbanInfrastructurePool.id,
-            optionId: urbanOptions[3].id,
-            userId: null, // Anonymous votes
-          })),
-      ],
-    });
-
-    // Add votes to the environmental pool (active, anonymous)
-    const environmentalOptions = await prisma.votingOption.findMany({
-      where: { poolId: environmentalPool.id },
-    });
-
-    // For anonymous polls, we need to:
-    // 1. Create anonymous votes (no userId)
-    // 2. Track user participation separately
-
-    // Create anonymous votes first
-    await prisma.vote.createMany({
-      data: [
-        // Add anonymous votes for various options
-        // Option 0 votes
-        ...Array(12)
-          .fill(null)
-          .map(() => ({
-            poolId: environmentalPool.id,
-            optionId: environmentalOptions[0].id,
-            userId: null,
-          })),
-
-        // Option 1 votes
-        ...Array(8)
-          .fill(null)
-          .map(() => ({
-            poolId: environmentalPool.id,
-            optionId: environmentalOptions[1].id,
-            userId: null,
-          })),
-
-        // Option 2 votes
-        ...Array(15)
-          .fill(null)
-          .map(() => ({
-            poolId: environmentalPool.id,
-            optionId: environmentalOptions[2].id,
-            userId: null,
-          })),
-      ],
-    });
-
-    // Now track user participation without revealing their choices
-    // First, get the IDs of all test users
-    const testUserIds = await Promise.all(
-      testUsers.map(async (user) => {
-        const found = await prisma.user.findUnique({
-          where: { email: user.email },
-          select: { id: true },
-        });
-        return found?.id;
-      })
-    );
-
-    // Then create the participation records for all users
-    await prisma.votingParticipation.createMany({
-      data: [
-        // Admin participated
-        {
-          userId: adminUser.id,
-          poolId: environmentalPool.id,
-        },
-
-        // Regular user participated
-        {
-          userId: regularUser.id,
-          poolId: environmentalPool.id,
-        },
-
-        // Other test users participated
-        ...testUserIds
-          .filter((id) => id !== undefined)
-          .map((id) => ({
-            userId: id as string,
-            poolId: environmentalPool.id,
-          })),
-      ],
     });
 
     console.log("Seed completed successfully!");

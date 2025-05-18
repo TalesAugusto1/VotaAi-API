@@ -310,7 +310,8 @@ export const getMe = async (req: Request, res: Response) => {
 
 // Add new endpoint to get user avatar image
 export const getUserAvatar = async (req: Request, res: Response) => {
-  const { userId } = req.params;
+  const params = req.params;
+  const userId = parseInt(params.userId, 10);
   console.log(`[AUTH] Get avatar request for user ID: ${userId}`);
   try {
     const user = await prisma.user.findUnique({

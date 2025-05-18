@@ -1,9 +1,8 @@
 import multer from "multer";
 import { Request, Response, NextFunction } from "express";
-import fs from "fs";
-import path from "path";
+import dotenv from "dotenv";
 // Types are now defined in /src/types/express.d.ts
-
+dotenv.config();
 // Configure in-memory storage instead of disk storage
 const storage = multer.memoryStorage();
 

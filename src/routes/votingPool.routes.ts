@@ -8,6 +8,7 @@ import {
   getPoolImage,
   getOptionImage,
   getBatchVotingPools,
+  getVotingPoolByIds,
 } from "../controllers/votingPool.controller";
 import { validate } from "../middleware/validation.middleware";
 import {
@@ -26,8 +27,10 @@ const router = Router();
 
 // Public routes
 router.get("/", getAllVotingPools);
+router.get("/batchPools", getVotingPoolByIds);
 router.get("/batch", getBatchVotingPools);
 router.get("/:id", getVotingPoolById);
+
 router.get("/:id/image", getPoolImage);
 router.get("/option/:id/image", getOptionImage);
 
